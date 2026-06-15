@@ -1,0 +1,26 @@
+# Core deep learning
+torch
+einops
+reformer-pytorch
+torchview
+
+# Scientific stack
+numpy
+pandas
+scipy
+scikit-learn
+statsmodels
+statsforecast
+hmmlearn
+
+# Time-series specific
+darts
+pysdtw
+
+# Visualization
+matplotlib
+seaborn
+
+# Experiment tracking / logging (optional)
+comet-ml
+tqdm

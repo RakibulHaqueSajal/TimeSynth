@@ -1,0 +1,75 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.pytest_cache/
+.ipynb_checkpoints/
+
+# --- OS / IDE / personal ---
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+.claude/
+
+# --- LaTeX intermediates ---
+*.aux
+*.bbl
+*.bcf
+*.blg
+*.fdb_latexmk
+*.fls
+*.log
+*.lot
+*.lof
+*.out
+*.run.xml
+*.synctex.gz
+*.toc
+*.nav
+*.snm
+*.vrb
+
+# --- Large derived artifacts (regenerable; not in git) ---
+# Model checkpoints (~20 GB) — regenerable by training
+checkpoints/
+
+# Train/test data + ARIMA precomputed outputs (~74 GB) — regenerable from Data_Creator/
+Train_Test_Validation/
+
+# Per-model SLURM run outputs (~18 GB) — regenerable from slurm/ jobs
+Scripts/
+
+# Training logs — regenerable
+logs/
+
+# Exploratory plot dumps — regenerable from analysis scripts
+new_plots/
+
+# Raw experiment stdout dump — regenerable from main.py + slurm/
+result_long_term_forecast.txt
+
+# Comparison CSVs / figures (~625 MB) — regenerable from Statistical_Test/
+Model_Comparison/
+
+# Generated statistical-test outputs (CSVs + plots) — regenerable
+Statistical_Test/plots/
+Statistical_Test/*.csv
+
+# Per-script generated plot dumps living next to source
+template/*.png
+template/*.pdf
+fidelity_metric_illustration/*.png
+
+# Common data/checkpoint blobs
+*.npy
+*.npz
+*.pkl
+*.pt
+*.pth
+*.ckpt
