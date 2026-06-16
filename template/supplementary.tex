@@ -1,0 +1,329 @@
+\documentclass[11pt]{article}
+
+% ── Packages ──
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{geometry}
+\usepackage{hyperref}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{tabularx}
+
+\geometry{margin=1in}
+
+\renewcommand{\thefigure}{S\arabic{figure}}
+\renewcommand{\thetable}{S\arabic{table}}
+\renewcommand{\theequation}{S\arabic{equation}}
+\renewcommand{\thesection}{S\arabic{section}}
+
+\begin{document}
+
+\begin{center}
+    {\LARGE\bfseries Supplementary Methods}
+\end{center}
+
+\vspace{1em}
+
+% ════════════════════════════════════════════════════════════════
+\section{Signal Family Equations}
+\label{sec:equations}
+% ════════════════════════════════════════════════════════════════
+
+Each synthetic signal family is defined by a closed-form parametric equation whose terms map to interpretable physiological quantities. All parameters are sampled independently and uniformly from the bounds listed in Supplementary Table~\ref{tab:bounds} unless otherwise noted.
+
+\paragraph{Single-phase modulation (SPM).}
+The SPM family models quasi-periodic, respiration-modulated dynamics observed in photoplethysmogram (PPG) waveforms:
+\begin{equation}
+    x(t) = A \sin\!\bigl(2\pi f\, t + \beta \sin(2\pi f_{\mathrm{mod}}\, t)\bigr) + c
+    \label{eq:spm}
+\end{equation}
+where $A$ is the carrier amplitude, $f$ the carrier frequency~(Hz), $\beta$ the phase-modulation index controlling the depth of respiratory modulation, $f_{\mathrm{mod}}$ the modulation frequency~(Hz), and $c$ a DC offset.
+
+\paragraph{Dual-phase modulation (DPM).}
+The DPM family extends Eq.~\eqref{eq:spm} to a superposition of two independently modulated components sharing a common offset, capturing the multi-harmonic structure characteristic of the ECG S-Q interval:
+\begin{equation}
+    x(t) = \sum_{i=0}^{1} A_i \sin\!\bigl(2\pi f_i\, t + \beta_i \sin(2\pi f_{\mathrm{mod},i}\, t)\bigr) + c
+    \label{eq:dpm}
+\end{equation}
+Each component has its own amplitude~$A_i$, carrier frequency~$f_i$, modulation index~$\beta_i$, and modulation frequency~$f_{\mathrm{mod},i}$, all sampled independently from the same bounds as SPM. No constraint is imposed requiring $f_0 \neq f_1$; diversity arises naturally from independent uniform sampling.
+
+\paragraph{Drift-harmonic (DH).}
+The DH family combines a carrier oscillation with a time-varying amplitude envelope and linear trend, reproducing slow non-stationarities observed in EEG during arousal-state transitions:
+\begin{equation}
+    x(t) = (1 + \varepsilon\, t)\,\sin(2\pi f\, t + \varphi) + a\, t
+    \label{eq:dh}
+\end{equation}
+where $\varepsilon$ is the envelope drift rate (fixed at $-0.05$ across all realisations), $f$ the carrier frequency, $\varphi$ the initial phase, and $a$ the linear trend coefficient. The raw signal is min--max normalised to $[0, 1]$:
+\begin{equation}
+    \tilde{x}(t) = \frac{x(t) - \min_\tau x(\tau)}{\max_\tau x(\tau) - \min_\tau x(\tau)}
+    \label{eq:dh_norm}
+\end{equation}
+
+% ════════════════════════════════════════════════════════════════
+\section{Parametric Fitting to Real Biosignals}
+\label{sec:fitting}
+% ════════════════════════════════════════════════════════════════
+
+To derive physiologically grounded parameter bounds, each parametric model was fit to real signal segments from three clinical-grade datasets. Fitting was performed using differentiable parametric modules implemented in PyTorch and optimised with Adam. After each gradient step, all learnable parameters were clamped to predefined physiological bounds (box constraints). Overlapping segments were blended using cosine-weighted averaging for continuity. Full fitting hyperparameters are listed in Supplementary Table~\ref{tab:fitting}.
+
+\paragraph{PPG fitting.}
+Blood volume pulse (BVP) recordings from PPG-DaLiA (15 subjects, $f_s = 64$~Hz) were fit using a bounded drift-harmonic model (Eq.~\eqref{eq:dh}) with learnable parameters $\varepsilon$, $f$, $\varphi$, and $a$. Segments of 5.0~s with 50\% overlap were optimised for 500 epochs using MSE loss ($\mathrm{lr} = 0.01$). Parameter bounds: $\varepsilon \in [-0.05,\, 0.05]$, $f \in [0.85,\, 1.1]$~Hz, $\varphi \in [-\pi/4,\, \pi/4]$~rad, $a \in [-0.1,\, 0.1]$.
+
+\paragraph{ECG fitting.}
+S-Q interval segments from the MIT-BIH Arrhythmia Database (48 records, $f_s = 360$~Hz, 10~s per record) were fit using a phase-modulated multisine model (Eq.~\eqref{eq:dpm}) with $N = 2$ components. Segments of 1.0~s with 15\% overlap and 10\% blend ratio were optimised for 500 epochs using L1 loss ($\mathrm{lr} = 0.001$). Parameter bounds: $A_i \in [0.1,\, 0.4]$, $f_i \in [0.5,\, 3.0]$~Hz, $\beta_i \in [0.01,\, 0.3]$, $f_{\mathrm{mod},i} \in [0.01,\, 0.1]$~Hz, $c \in [0.0,\, 1.0]$.
+
+\paragraph{EEG fitting.}
+Scalp EEG recordings from the CHB-MIT database (channel FP1-F7, 100~s extracted segments) were fit using a multi-band parametric model with $n_{\mathrm{bands}} = 2$ frequency bands and $n_{\mathrm{spikes}} = 2$ transient Gaussian spike components:
+\begin{equation}
+    x(t) = \sum_{i=1}^{n_{\mathrm{bands}}} A_i\,(1 + e_i \sin(0.5\pi t))\,\sin(2\pi f_i\, t + \varphi_i)
+         + \sum_{j=1}^{n_{\mathrm{spikes}}} A_j^{(\mathrm{sp})}\,\exp\!\Bigl(-\frac{(t - t_{c,j})^2}{\sigma_j^2}\Bigr)
+    \label{eq:eeg_fit}
+\end{equation}
+where $e_i$ denotes the envelope modulation depth, $A_j^{(\mathrm{sp})}$ and $t_{c,j}$ the spike amplitude and centre, and $\sigma_j$ the spike width. This richer model accommodated the transient deflections and multi-band structure characteristic of scalp EEG. Signals were normalised to $[-1, 1]$ prior to fitting. Segments of 1.0~s were optimised for 100 epochs using L1 loss ($\mathrm{lr} = 0.01$).
+
+\paragraph{Cosine blending.}
+Overlapping fitted segments were combined using cosine ramp weights to prevent discontinuities at segment boundaries:
+\begin{equation}
+    w(n) = \frac{1}{2}\Bigl(1 - \cos\!\bigl(\tfrac{\pi\, n}{N-1}\bigr)\Bigr), \quad n = 0, 1, \ldots, N-1
+    \label{eq:cosine_blend}
+\end{equation}
+where $N$ is the segment length. The final fitted signal at each time point is the weighted average:
+\begin{equation}
+    \hat{x}(t) = \frac{\displaystyle\sum_k w_k(t)\,\hat{x}_k(t)}{\displaystyle\sum_k w_k(t)}
+    \label{eq:blend_avg}
+\end{equation}
+where the sum is over all segments $k$ covering time $t$.
+
+% ════════════════════════════════════════════════════════════════
+\section{Generation Procedure and Parameter Uniqueness}
+\label{sec:generation}
+% ════════════════════════════════════════════════════════════════
+
+For each signal family, 100 unique parameter realisations were generated (70 training, 10 validation, 20 test). All parameters were sampled independently from uniform distributions over the bounds in Supplementary Table~\ref{tab:bounds} using a fixed random seed ($\mathrm{seed} = 42$) for reproducibility.
+
+To guarantee that no two signals share the same parameter configuration---including across splits---each candidate parameter tuple was converted to a canonical string at six-decimal precision and hashed via MD5:
+\begin{equation}
+    h = \mathrm{MD5}\!\bigl(\texttt{"}p_1\texttt{\_}p_2\texttt{\_}\cdots\texttt{\_}p_k\texttt{"}\bigr)
+    \label{eq:hash}
+\end{equation}
+If the resulting hash matched any previously accepted configuration, the candidate was rejected and a new tuple was sampled. For SPM signals, the hash key comprised five values ($A$, $f$, $\beta$, $f_{\mathrm{mod}}$, $c$). For DPM signals, it was extended to nine values ($A_0$, $A_1$, $f_0$, $f_1$, $\beta_0$, $\beta_1$, $f_{\mathrm{mod},0}$, $f_{\mathrm{mod},1}$, $c$). For DH signals, it covered $f$, $\varphi$, and $a$ (with $\varepsilon$ fixed).
+
+All generation parameters were embedded directly in each output filename for full traceability (e.g., \texttt{train\_000\_A\_0.1050\_f\_0.8234\_beta\_0.1234\_fmod\_0.0512\_offset\_0.4567.csv}). Signals were sampled at $f_s = 10$~Hz for 300~s, yielding $T = 3{,}000$ samples per instance over an evenly spaced time vector $t \in [0, 300]$.
+
+% ════════════════════════════════════════════════════════════════
+\section{Controlled Evaluation Paradigms}
+\label{sec:paradigms}
+% ════════════════════════════════════════════════════════════════
+
+Forecasters are evaluated under five progressively challenging conditions. Each paradigm isolates a specific axis of difficulty relevant to digital twin deployment. Unless otherwise noted, all paradigms use SPM signals (Eq.~\eqref{eq:spm}) as the base signal family; the same protocols apply analogously to DPM and DH families.
+
+% ── 4.1 Noise robustness ──────────────────────────────────────
+\subsection{Noise robustness}
+\label{sec:noise}
+
+Models trained exclusively on clean signals are tested under additive white Gaussian noise (AWGN) at six SNR levels (Supplementary Table~\ref{tab:snr}), measuring graceful degradation without noise-aware training. Noise power is calibrated relative to the zero-mean signal power to prevent the DC offset from inflating the power estimate:
+\begin{equation}
+    P_{\mathrm{sig}} = \frac{1}{T}\sum_{t=1}^{T}\bigl(x(t) - \bar{x}\bigr)^2 + \epsilon
+    \label{eq:sig_power}
+\end{equation}
+\begin{equation}
+    \sigma_{\mathrm{noise}} = \sqrt{\frac{P_{\mathrm{sig}}}{10^{\,\mathrm{SNR}_{\mathrm{dB}}/10}}}
+    \label{eq:noise_std}
+\end{equation}
+\begin{equation}
+    \tilde{x}(t) = x(t) + \mathcal{N}(0,\, \sigma_{\mathrm{noise}}^2)
+    \label{eq:noisy_signal}
+\end{equation}
+where $\epsilon = 10^{-12}$ prevents division by zero. For DH signals, noise is added after min--max normalisation (Eq.~\eqref{eq:dh_norm}). Each SNR level uses an independent random number generator seeded as $\mathrm{seed}_l = \mathrm{seed}_{\mathrm{base}} + l \times 1000$ (where $l$ is the SNR level index), ensuring independent noise realisations across levels while maintaining within-level reproducibility. The same parameter configurations are used across all SNR levels and the clean condition, so that performance differences are attributable solely to noise.
+
+Each noise condition contains 70 training, 10 validation, and 20 test instances, mirroring the clean splits with identical parameter configurations.
+
+% ── 4.2 Frequency distribution shift ──────────────────────────
+\subsection{Frequency distribution shift}
+\label{sec:ood}
+
+To quantify out-of-distribution (OOD) generalisation, the carrier frequency range used during training is treated as shift-0. Additional test sets are generated from frequency bands systematically displaced from the training range. Given a training frequency interval $(f_{\mathrm{low}},\, f_{\mathrm{high}})$ with width $w = f_{\mathrm{high}} - f_{\mathrm{low}}$:
+
+\begin{itemize}
+    \item \textbf{Below training range}: the interval $[0,\, f_{\mathrm{low}})$ is divided into $n_{\mathrm{below}} = 2$ equally spaced sub-intervals, producing two buckets progressively further below the training distribution.
+    \item \textbf{Above training range}: $n_{\mathrm{above}} = 2$ additional intervals of width $w$ are placed by stepping upward from $f_{\mathrm{high}}$, i.e.\ bucket $k$ spans $[f_{\mathrm{low}} + kw,\; f_{\mathrm{high}} + kw]$ for $k = 1, 2$.
+\end{itemize}
+
+This yields five frequency buckets in total. For SPM signals with training bounds $(0.6782, 1.4112)$~Hz:
+\begin{center}
+\begin{tabular}{@{}clc@{}}
+\toprule
+\textbf{Shift} & \textbf{Frequency range (Hz)} & \textbf{Relation to training} \\
+\midrule
+$-2$ & $[0.00,\; 0.34]$  & Far below  \\
+$-1$ & $[0.34,\; 0.68]$  & Near below \\
+$\phantom{+}0$  & $[0.68,\; 1.41]$  & Training (in-distribution) \\
+$+1$ & $[1.41,\; 2.14]$  & Near above \\
+$+2$ & $[2.14,\; 2.87]$  & Far above  \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Within each OOD bucket, 20 test signals are generated with the carrier frequency sampled uniformly from the bucket range and all non-frequency parameters ($A$, $\beta$, $f_{\mathrm{mod}}$, $c$) sampled from the original training bounds. This design isolates the effect of frequency shift from other parameter variations. The same protocol is applied to DH signals with training range $(0.85, 1.10)$~Hz.
+
+% ── 4.3 Single state transition ───────────────────────────────
+\subsection{Single state transition}
+\label{sec:single_cp}
+
+A deterministic frequency change-point is placed at a variable position $t^*$ within the signal, testing whether models can detect and adapt to abrupt state changes. The signal alternates between two frequency states whose ranges are deliberately separated to ensure identifiability:
+\begin{equation}
+    f_0 \sim \mathcal{U}\!\bigl(f_{\mathrm{low}} + 0.05\,\Delta f,\;\; f_{\mathrm{low}} + 0.25\,\Delta f\bigr), \quad
+    f_1 \sim \mathcal{U}\!\bigl(f_{\mathrm{low}} + 0.55\,\Delta f,\;\; f_{\mathrm{low}} + 0.75\,\Delta f\bigr)
+    \label{eq:freq_sep}
+\end{equation}
+where $\Delta f = f_{\mathrm{high}} - f_{\mathrm{low}}$ is the span of the training frequency range. For SPM with $(f_{\mathrm{low}}, f_{\mathrm{high}}) = (0.6782, 1.4112)$, this yields $f_0 \in [0.71,\, 0.94]$~Hz and $f_1 \in [1.07,\, 1.21]$~Hz. The same separation logic is applied to modulation frequencies:
+\begin{equation}
+    f_{\mathrm{mod},0} \sim \mathcal{U}\!\bigl(f_{\mathrm{mod}}^{\mathrm{low}} + 0.05\,\Delta f_{\mathrm{mod}},\;\; f_{\mathrm{mod}}^{\mathrm{low}} + 0.30\,\Delta f_{\mathrm{mod}}\bigr), \quad
+    f_{\mathrm{mod},1} \sim \mathcal{U}\!\bigl(f_{\mathrm{mod}}^{\mathrm{low}} + 0.55\,\Delta f_{\mathrm{mod}},\;\; f_{\mathrm{mod}}^{\mathrm{low}} + 0.90\,\Delta f_{\mathrm{mod}}\bigr)
+    \label{eq:fmod_sep}
+\end{equation}
+
+Small per-realisation perturbations are added to amplitude and modulation depth to further differentiate states: $\Delta A \sim \mathcal{U}(0.01, 0.03)$ and $\Delta\beta \sim \mathcal{U}(0.02, 0.04)$.
+
+\paragraph{Phase continuity.}
+To prevent artificial discontinuities at the change-point, the instantaneous phase is computed recursively:
+\begin{equation}
+    \theta(k) = \theta(k-1) + 2\pi\, f_{S(k-1)}\, \Delta t, \quad k = 1, \ldots, T-1
+    \label{eq:phase_cont}
+\end{equation}
+where $S(k) \in \{0, 1\}$ is the state at sample $k$, $f_{S(k)}$ is the corresponding carrier frequency, and $\Delta t = 1/f_s$. This ensures that the phase accumulates smoothly across state boundaries.
+
+\paragraph{Change-point placement.}
+The change-point $t^*$ is sampled uniformly over $[0.25\,T,\; 0.75\,T]$, where $T$ is the total signal length. Given a history window of $H = 150$ samples and a prediction window of $P = 100$ samples, this placement allows the transition to fall either within the observed history (\textit{in-context}: positions H-2 through H-40 samples before the forecast boundary) or within the unobserved future (\textit{no-context}: positions F-2 through F-40 samples after the forecast boundary).
+
+Each split contains 600 training, 100 validation, and 200 test instances. Full metadata---including $t^*$, per-state parameters, and regime labels---is recorded in accompanying CSV files.
+
+% ── 4.4 Two-changepoint evaluation ────────────────────────────
+\subsection{Two-changepoint evaluation}
+\label{sec:two_cp}
+
+This paradigm extends the single change-point setting to two deterministic transitions, producing three-segment signals with state motifs ABA (state $0 \to 1 \to 0$) or BAB (state $1 \to 0 \to 1$). The two change-points $t_1 < t_2$ define a dwell interval $\tau_{\mathrm{dwell}} = t_2 - t_1$ (minimum 5 samples) in the intermediate state. Motifs are balanced: each split contains approximately equal numbers of ABA and BAB realisations, shuffled randomly.
+
+Three regime types classify where transitions fall relative to the forecast boundary at sample $H$:
+
+\begin{itemize}
+    \item \textbf{HH} (both in history): $t_2 < H$. The model observes both transitions during the history window.
+    \item \textbf{HF} (history--future): $t_1 < H \leq t_2$. The model observes the first transition but must forecast through the second.
+    \item \textbf{FF} (both in future): $H \leq t_1$. Neither transition is observed; both occur in the prediction horizon.
+\end{itemize}
+
+Regimes are sampled with approximately equal probability across training ($\mathrm{HH}\!:\!\mathrm{HF}\!:\!\mathrm{FF} = 0.34\!:\!0.33\!:\!0.33$), validation ($0.34\!:\!0.33\!:\!0.33$), and test ($0.33\!:\!0.34\!:\!0.33$) splits. The window configuration uses $H = 150$ samples (15~s), $P = 100$ samples (10~s), and an optional extra context of 150 samples, yielding a total signal length of $T = 400$ samples (40~s) at $f_s = 10$~Hz.
+
+Per-state parameter separation follows the same protocol as single-changepoint signals (Eqs.~\eqref{eq:freq_sep}--\eqref{eq:fmod_sep}), and phase continuity is maintained via recursive accumulation (Eq.~\eqref{eq:phase_cont}) across both transitions.
+
+Each split contains 600 training, 100 validation, and 400 test instances with transitions, plus an optional 50 no-transition baseline test signals (constant single-state, balanced between state~0 and state~1). Comprehensive metadata---including motif type, regime label, $t_1$, $t_2$, dwell duration, and all per-state parameters---is recorded per instance.
+
+% ── 4.5 Markov switching ──────────────────────────────────────
+\subsection{Markov switching}
+\label{sec:markov}
+
+Signals alternate stochastically between two frequency states governed by a symmetric two-state Markov chain. At each time step, the state transitions with probability $p$ or persists with probability $1 - p$:
+\begin{equation}
+    S(k) =
+    \begin{cases}
+        1 - S(k-1) & \text{with probability } p \\
+        S(k-1)     & \text{with probability } 1 - p
+    \end{cases}
+    \label{eq:markov}
+\end{equation}
+with $S(0) = 0$. This is evaluated at five transition probabilities spanning the full range of temporal non-stationarity: $p \in \{0.0,\, 0.1,\, 0.5,\, 0.9,\, 1.0\}$, where $p = 0$ yields a constant-state signal (stationary baseline) and $p = 1$ forces a state switch at every sample (maximally non-stationary).
+
+Per-state frequency and modulation parameter ranges follow the well-separated protocol (Eqs.~\eqref{eq:freq_sep}--\eqref{eq:fmod_sep}). Modulation depth is additionally perturbed between states: $\beta_1 = \beta_0 + \Delta\beta$ with $\Delta\beta \sim \mathcal{U}(0.02, 0.04)$. Phase continuity is maintained via recursive accumulation (Eq.~\eqref{eq:phase_cont}).
+
+For each value of $p$, the dataset contains 70 training, 10 validation, and 20 test instances (100 per $p$; 500 total across all five conditions). Signals are sampled at $f_s = 10$~Hz for 300~s ($T = 3{,}000$ samples). Each $p$-condition is stored in a separate directory to enable both per-condition and aggregate analyses.
+
+% ════════════════════════════════════════════════════════════════
+\section*{Supplementary Tables}
+% ════════════════════════════════════════════════════════════════
+
+\begin{table}[ht]
+\centering
+\caption{Parameter bounds for synthetic signal generation. All parameters are sampled from uniform distributions over the stated ranges unless marked as fixed.}
+\label{tab:bounds}
+\smallskip
+\begin{tabular}{@{}llccc@{}}
+\toprule
+\textbf{Signal family} & \textbf{Parameter} & \textbf{Symbol} & \textbf{Range} & \textbf{Unit} \\
+\midrule
+\multirow{5}{*}{SPM}
+    & Carrier amplitude      & $A$                & $[0.1,\; 0.1227]$                       & ---   \\
+    & Carrier frequency      & $f$                & $[0.6782,\; 1.4112]$                    & Hz    \\
+    & Modulation index       & $\beta$            & $[0.01,\; 0.3]$                         & rad   \\
+    & Modulation frequency   & $f_{\mathrm{mod}}$ & $[0.01,\; 0.1]$                         & Hz    \\
+    & DC offset              & $c$                & $[0.1937,\; 0.7418]$                    & ---   \\
+\midrule
+\multirow{2}{*}{DPM}
+    & Per-component params   & $A_i, f_i, \beta_i, f_{\mathrm{mod},i}$ & Same as SPM       & ---   \\
+    & Shared offset          & $c$                & $[0.1937,\; 0.7418]$                    & ---   \\
+\midrule
+\multirow{4}{*}{DH}
+    & Envelope drift rate    & $\varepsilon$      & $-0.05$ (fixed)                         & s$^{-1}$ \\
+    & Carrier frequency      & $f$                & $[0.85,\; 1.10]$                        & Hz    \\
+    & Initial phase          & $\varphi$          & $[-0.6,\; 0.75]$                        & rad   \\
+    & Linear trend coeff.    & $a$                & $[-6\!\times\!10^{-5},\; 8\!\times\!10^{-5}]$ & s$^{-1}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[ht]
+\centering
+\caption{SNR levels for noise robustness evaluation.}
+\label{tab:snr}
+\smallskip
+\begin{tabular}{@{}ccc@{}}
+\toprule
+\textbf{SNR level index} & \textbf{SNR (dB)} & \textbf{Description} \\
+\midrule
+1 & 40 & Near-clean    \\
+2 & 30 & Low noise     \\
+3 & 20 & Moderate noise \\
+4 & 10 & Substantial noise \\
+5 & 5  & High noise    \\
+6 & 1  & Severe noise  \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[ht]
+\centering
+\caption{Fitting hyperparameters for real biosignal datasets.}
+\label{tab:fitting}
+\smallskip
+\begin{tabular}{@{}lcccccccc@{}}
+\toprule
+\textbf{Dataset} & \textbf{Signal} & $\boldsymbol{f_s}$ \textbf{(Hz)} & \textbf{Seg.\ (s)} & \textbf{Overlap} & \textbf{Epochs} & \textbf{lr} & \textbf{Loss} & \textbf{Model} \\
+\midrule
+PPG-DaLiA & PPG/BVP     & 64  & 5.0 & 50\% & 500 & 0.01  & MSE & Drift-harmonic         \\
+MIT-BIH   & ECG (S-Q)   & 360 & 1.0 & 15\% & 500 & 0.001 & L1  & Phase-mod.\ multisine  \\
+CHB-MIT   & EEG (FP1-F7)& --- & 1.0 & ---  & 100 & 0.01  & L1  & Multi-band + spike     \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[ht]
+\centering
+\caption{Dataset sizes across controlled evaluation paradigms. Counts denote unique signal instances per split.}
+\label{tab:dataset_sizes}
+\smallskip
+\begin{tabular}{@{}lcccl@{}}
+\toprule
+\textbf{Paradigm} & \textbf{Train} & \textbf{Val} & \textbf{Test} & \textbf{Notes} \\
+\midrule
+Clean (baseline)            & 70  & 10  & 20  & Per signal family \\
+Noise robustness            & 70  & 10  & 20  & Per SNR level ($\times 6$) \\
+Frequency distribution shift& --- & --- & 20  & Per frequency bucket ($\times 5$) \\
+Single state transition     & 600 & 100 & 200 & $t^* \in [0.25T,\, 0.75T]$ \\
+Two-changepoint             & 600 & 100 & 400 & + 50 no-transition baselines \\
+Markov switching            & 70  & 10  & 20  & Per $p$-value ($\times 5$) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\end{document}

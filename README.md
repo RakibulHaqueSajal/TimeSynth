@@ -14,13 +14,14 @@ fidelity metrics in addition to standard MAE.
 ├── Model/                        # Architectures (Autoformer, PatchTST, MICN, ...)
 ├── Layers/                       # Building blocks (attention, conv, embeds, RevIN, ...)
 ├── Experiment/                   # Train / evaluate / test orchestration
+├── Bio_Synthesize/               # Synthetic biosignal generation (matches supplementary appendix)
 ├── Data_Creator/                 # Synthetic signal generation
 ├── Data_Loader/                  # Dataset / DataLoader wrappers
 ├── utils/                        # Metrics, losses, tools, augmentation
 ├── markov_state/                 # Markov-state analysis scripts
 ├── Statistical_Test/             # Paired tests (clean, noise, shift, state-transition) + plotting
 ├── fidelity_metric_illustration/ # Standalone figures for the fidelity metrics
-├── template/                     # Paper LaTeX + supplementary text
+├── template/                     # Paper LaTeX (result.tex) + supplementary.tex appendix
 ├── slurm/                        # SLURM launch scripts
 ├── run_*.sh                      # Parameter sweep launchers (linear, mlp, CNN, transformer, ...)
 ├── test_*.py                     # Ad-hoc test entry points

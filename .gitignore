@@ -36,26 +36,27 @@ Thumbs.db
 *.vrb
 
 # --- Large derived artifacts (regenerable; not in git) ---
+# Anchored to root with leading "/" so identically-named nested dirs aren't ignored.
 # Model checkpoints (~20 GB) — regenerable by training
-checkpoints/
+/checkpoints/
 
 # Train/test data + ARIMA precomputed outputs (~74 GB) — regenerable from Data_Creator/
-Train_Test_Validation/
+/Train_Test_Validation/
 
 # Per-model SLURM run outputs (~18 GB) — regenerable from slurm/ jobs
-Scripts/
+/Scripts/
 
 # Training logs — regenerable
-logs/
+/logs/
 
 # Exploratory plot dumps — regenerable from analysis scripts
-new_plots/
+/new_plots/
 
 # Raw experiment stdout dump — regenerable from main.py + slurm/
-result_long_term_forecast.txt
+/result_long_term_forecast.txt
 
 # Comparison CSVs / figures (~625 MB) — regenerable from Statistical_Test/
-Model_Comparison/
+/Model_Comparison/
 
 # Generated statistical-test outputs (CSVs + plots) — regenerable
 Statistical_Test/plots/
