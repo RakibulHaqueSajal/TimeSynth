@@ -1,4 +1,4 @@
-# Time-Series Forecasting on Physiological Signals
+# TimeSynth: A Temporal Fidelity Framework for Health Signal Digital Twins
 
 Benchmarking 11 forecasting architectures (Linear / DLinear / MLinear / NBeats /
 FreMLP / FITS / PatchTST / MICN / ModernTCN / Transformer / Autoformer) on
