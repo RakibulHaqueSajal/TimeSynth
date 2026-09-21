@@ -23,16 +23,16 @@ if __name__ == '__main__':
     parser.add_argument('--val_sample_size', type=int, default=None, help='random seed')
    
     # Basic config
-    parser.add_argument('--task_name', type=str, required=True, default='long_term_forecast',
+    parser.add_argument('--task_name', type=str, default='long_term_forecast',
                         help='task name, options:[long_term_forecast, short_term_forecast, imputation, classification, anomaly_detection]')
     parser.add_argument('--is_training', type=int, required=True, default=1, help='status')
-    parser.add_argument('--model_id', type=str, required=True, default='test', help='model id')
-    parser.add_argument('--model', type=str, required=True, default='Autoformer',
+    parser.add_argument('--model_id', type=str, default='auto', help="model id; 'auto' derives it from the configs")
+    parser.add_argument('--model', type=str, default=None,
                         help='model name, options: [Autoformer, Transformer, TimesNet]')
     parser.add_argument('--random_seed', type=int, default=2021, help='random seed')
 
     # Data loader
-    parser.add_argument('--data', type=str, required=True, default='custom', help='dataset type')
+    parser.add_argument('--data', type=str, default='custom', help='dataset type')
     parser.add_argument('--root_path', type=str, default='./Synthetic_datasets/', help='root path of the data folder')
     # parser.add_argument('--train_files', type=str, nargs='+', default=['train/train_coefficient_0.1.csv', 'train/train_coefficient_0.3.csv', 'train/train_coefficient_0.5.csv'],
     #                     help='list of training files')
@@ -214,6 +214,8 @@ if __name__ == '__main__':
 
     # P0.2: merge YAML configs (explicit flags win), derive root_path and result labels
     resolve_run(args)
+    if args.model is None:
+        parser.error('--model is required unless --model_config is given')
     if args.checkpoints:            # legacy alias
         args.checkpoint_dir = args.checkpoints
     args.checkpoints = args.checkpoint_dir
