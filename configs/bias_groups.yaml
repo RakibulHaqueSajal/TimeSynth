@@ -1,0 +1,47 @@
+# Inductive-bias taxonomy (REVISION_PLAN.md P2.5). Every plotting and statistics script reads
+# group membership, order and colors from this file so that text, figures and tables agree
+# (R1.2/R2.2). Membership rule: group by the operation that defines the model's inductive bias.
+#
+# DECISION D4 (pending): DLinear, FITS and FreMLP are linear/MLP maps that also perform an explicit
+# decomposition or spectral transform. Recommended placement (used here): Decomposition.
+groups:
+  Local receptive field:
+    key: local
+    mechanism: Operations on short windows or patches
+    color: "#1b9e77"
+    models: [ModernTCN, MICN_Mean, MICN_Regre, PatchTST, TimesNet]
+  Global attention:
+    key: global
+    mechanism: Pointwise tokens attending over the full context
+    color: "#d95f02"
+    models: [Transformer]
+  Decomposition:
+    key: decomp
+    mechanism: Explicit trend, seasonal or spectral split
+    color: "#7570b3"
+    models: [Autoformer, DLinear, FITS, FreMLP]
+  Linear and MLP:
+    key: linear
+    mechanism: Linear or MLP maps along time
+    color: "#e7298a"
+    models: [Linear, MLinear, NBeats, TSMixer]
+  Probabilistic:
+    key: prob
+    mechanism: Sampled futures
+    color: "#66a61e"
+    models: [CSDI]
+  Floor:
+    key: floor
+    mechanism: No learning
+    color: "#666666"
+    models: [SeasonalNaive]
+
+# Canonical model order for tables and legends
+model_order: [Linear, MLinear, NBeats, TSMixer, DLinear, FITS, FreMLP, Autoformer, Transformer,
+              PatchTST, TimesNet, ModernTCN, MICN_Mean, MICN_Regre, CSDI, SeasonalNaive]
+
+# Display names (LaTeX-safe)
+display:
+  MICN_Mean: MICN (mean)
+  MICN_Regre: MICN (regre)
+  SeasonalNaive: Seasonal naive

@@ -122,3 +122,23 @@ def resolve_run(args: argparse.Namespace, argv: Optional[List[str]] = None) -> N
 def result_dir_for(args: argparse.Namespace, seed: int) -> str:
     paradigm = args.paradigm if not getattr(args, "condition", None) else f"{args.paradigm}__{args.condition}"
     return os.path.join(args.results_dir, paradigm, args.signal, args.model_label, f"seed{seed}")
+
+
+# ---------------------------------------------------------------------------
+# Bias groups (P2.5)
+# ---------------------------------------------------------------------------
+def load_bias_groups(path: Optional[str] = None) -> Dict[str, Any]:
+    """
+    Returns {'groups': {name: {...}}, 'model_to_group': {model: group_name},
+             'model_to_color': {model: hex}, 'model_order': [...], 'display': {...}}.
+    """
+    cfg = load_yaml(path or os.path.join(CONFIG_DIR, "bias_groups.yaml"))
+    m2g, m2c = {}, {}
+    for gname, g in cfg["groups"].items():
+        for m in g["models"]:
+            if m in m2g:
+                raise ValueError(f"model {m} listed in two bias groups")
+            m2g[m] = gname
+            m2c[m] = g["color"]
+    return {"groups": cfg["groups"], "model_to_group": m2g, "model_to_color": m2c,
+            "model_order": cfg.get("model_order", list(m2g)), "display": cfg.get("display", {})}
