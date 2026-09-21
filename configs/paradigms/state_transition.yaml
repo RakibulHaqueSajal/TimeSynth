@@ -1,0 +1,19 @@
+# Single deterministic state transition (Figs. 6-7). Uses the tag-aware loaders
+# (single_train / single_test) so meta.parquet carries the H/F tags.
+name: state_transition
+fs: 10.0
+data_root_rel: ""
+signals:
+  Single_Phase_Modulation: PhaseMod_OneState_Change
+args:
+  data: custom
+  task_name: long_term_forecast
+  features: S
+  target: Value
+  enc_in: 1
+  seq_len: 50
+  label_len: 0
+  pred_len: 100
+  train_stride: 1
+  eval_stride: 150
+  test_drop_last: false

@@ -20,12 +20,16 @@ class Dataset_Custom(Dataset):
                  random_sample_size=None,
                  random_seed=42,
                  patch_len=None,               # NEW: add patch_len for warning/padding
-                 pad_short_y=False):           # NEW: option to pad y if it's too short
+                 pad_short_y=False,            # NEW: option to pad y if it's too short
+                 stride=1):                    # P0.2: window stride (1 = legacy behavior)
         """
         Parameters:
         - size: [seq_len, label_len, pred_len]
         - patch_len: required only to warn or pad for patch-aligned autoregressive prediction
         - pad_short_y: if True, pads y to pred_len if it's shorter due to boundary
+        - stride: step between consecutive window starts within a file. The paper used 1
+          (fully overlapping windows). Use seq_len + pred_len for non-overlapping test windows.
+          Per-window provenance is kept in ``self.meta`` (file_id, file_name, window_start).
         """
         if size is None:
             self.seq_len, self.label_len, self.pred_len = 96, 24, 24
@@ -34,6 +38,8 @@ class Dataset_Custom(Dataset):
 
         self.patch_len = patch_len
         self.pad_short_y = pad_short_y
+        self.stride = max(1, int(stride))
+        self.meta = []   # one (file_id, file_name, window_start) per sample, same order as self.samples
 
         assert flag in ['train', 'val', 'test']
         self.flag = flag
@@ -78,7 +84,7 @@ class Dataset_Custom(Dataset):
             stacked = np.concatenate(all_values, axis=0)
             self.scaler.fit(stacked)
 
-        for fp in selected_files:
+        for file_id, fp in enumerate(selected_files):
             df = pd.read_csv(fp, parse_dates=['Time'], index_col='Time')
             values = df[[self.target]].values.astype(np.float32)
             if self.scaler:
@@ -92,7 +98,7 @@ class Dataset_Custom(Dataset):
             max_start = len(values) - self.seq_len
             if self.flag=='test' or self.flag=='val' or self.flag=='train':
                 self.label_len=0
-            for i in range(max_start - self.label_len - self.pred_len + 1):
+            for i in range(0, max_start - self.label_len - self.pred_len + 1, self.stride):
                 s_beg = i
                 s_end = s_beg + self.seq_len
                 r_beg = s_end - self.label_len
@@ -113,8 +119,9 @@ class Dataset_Custom(Dataset):
                 x_stamp = timestamps[s_beg:s_end]
 
                 self.samples.append((x, y, x_stamp, y_stamp))
+                self.meta.append((file_id, os.path.basename(fp), s_beg))
 
-        print(f"[{self.flag}] Loaded {len(self.samples)} samples.")
+        print(f"[{self.flag}] Loaded {len(self.samples)} samples (stride={self.stride}).")
 
         # Optional patch alignment warning
         if self.patch_len is not None and self.pred_len % self.patch_len != 0:
@@ -348,6 +355,8 @@ class Dataset_Custom_State(Dataset):
 
         self.patch_len = patch_len
         self.pad_short_y = pad_short_y
+        self.stride = max(1, int(stride))
+        self.meta = []   # one (file_id, file_name, window_start) per sample, same order as self.samples
 
         assert flag in ['train', 'val', 'test']
         self.flag = flag

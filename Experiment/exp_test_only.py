@@ -17,6 +17,7 @@ from torch.optim import lr_scheduler
 from torchview import draw_graph
 import matplotlib.pyplot as plt
 from utils.loss import hybrid_loss
+from utils.results_io import build_meta, write_run_outputs
 
 # Setting Comment Experiments
 # experiment = start(
@@ -299,16 +300,10 @@ class Exp_Long_Term_Forecast_Test_Dist(Exp_Basic):
         # ------------------------
         SAVE_GT_STATE = bool(getattr(self.args, "save_gt_state", True))
 
+        ckpt_dir = os.path.join(self.args.checkpoint_dir, getattr(self.args, "ckpt_name", setting))
         if test:
-            print("loading model")
-            self.model.load_state_dict(
-                torch.load(
-                    os.path.join(
-                        "/uufs/sci.utah.edu/projects/medvic-lab/Rakib/Time_Series/Time_Series_Forecast/checkpoints/" + setting,
-                        "checkpoint.pth",
-                    )
-                )
-            )
+            print("loading model from", ckpt_dir)
+            self.model.load_state_dict(torch.load(os.path.join(ckpt_dir, "checkpoint.pth")))
 
         # Global collections
         preds, trues = [], []
@@ -321,6 +316,7 @@ class Exp_Long_Term_Forecast_Test_Dist(Exp_Basic):
         use_tag_eval = (getattr(self.args, "data", "") == "single_test")
         tag_pred_hist = {}  # tag -> list of [1, L+H, C]
         tag_true_hist = {}  # tag -> list of [1, L+H, C]
+        global_tags = []    # one tag per window in loader order (for meta.parquet)
 
         self.model.eval()
         with torch.no_grad():
@@ -335,13 +331,13 @@ class Exp_Long_Term_Forecast_Test_Dist(Exp_Basic):
                     batch_x, batch_y, batch_x_mark, batch_y_mark = batch
                     meta = None
 
-                # If user wants GT states, meta MUST be a tensor of states
+                # GT states are saved only when the loader actually returns them as a tensor
                 y_state_true = None
+                if SAVE_GT_STATE and (meta is None or not torch.is_tensor(meta)):
+                    if i == 0:
+                        print("[info] loader returns no GT-state tensor; save_gt_state disabled for this run")
+                    SAVE_GT_STATE = False
                 if SAVE_GT_STATE:
-                    if meta is None:
-                        raise ValueError(
-                            "save_gt_state=True but dataset did not return 5th item (y_state_true)."
-                        )
                     y_state_true = meta  # expected torch.Tensor [B, something] or [B, something, 1]
 
                 # Move tensors to device (fixes your device mismatch)
@@ -477,6 +473,7 @@ class Exp_Long_Term_Forecast_Test_Dist(Exp_Basic):
                 # IMPORTANT: if SAVE_GT_STATE=True, meta is a tensor, not tags.
                 if (not SAVE_GT_STATE) and use_tag_eval and meta is not None:
                     tags = normalize_tags(meta, batch_size=pred.shape[0])
+                    global_tags.extend(tags)
                     for b, tag in enumerate(tags):
                         tag_pred_hist.setdefault(tag, []).append(pred_with_hist[b:b+1])
                         tag_true_hist.setdefault(tag, []).append(true_with_hist[b:b+1])
@@ -494,15 +491,16 @@ class Exp_Long_Term_Forecast_Test_Dist(Exp_Basic):
         # Save outputs
         # ------------------------
         setting = setting + distribution
-        folder_path = (
-            "/uufs/sci.utah.edu/projects/medvic-lab/Rakib/Time_Series/Time_Series_Forecast/Train_Test_Validation/"
-            + setting
-            + "/"
-        )
+        folder_path = getattr(self.args, "run_dir", None) or os.path.join(self.args.results_dir, setting)
         os.makedirs(folder_path, exist_ok=True)
 
-        np.save(os.path.join(folder_path, "test_pred_with_history.npy"), preds_with_history)
-        np.save(os.path.join(folder_path, "test_true_with_history.npy"), trues_with_history)
+        # P0.2 layout (pred/true/hist/meta) plus the legacy *_with_history arrays
+        L = self.args.seq_len
+        meta = build_meta(self.args, preds_with_history.shape[0], dataset=test_data,
+                          tags=(global_tags if len(global_tags) == preds_with_history.shape[0] else None))
+        write_run_outputs(self.args, folder_path, trues_with_history[:, :L, :],
+                          trues_with_history[:, L:, :], preds_with_history[:, L:, :], meta,
+                          save_legacy=getattr(self.args, "save_legacy_arrays", True))
 
         if SAVE_GT_STATE:
             true_states = np.concatenate(true_states, axis=0)  # [N, H, 1]
@@ -541,7 +539,7 @@ class Exp_Long_Term_Forecast_Test_Dist(Exp_Basic):
             np.save(os.path.join(folder_path, "test_metrics_by_tag.npy"), tag_metrics, allow_pickle=True)
 
         # log
-        with open("result_long_term_forecast.txt", "a") as f:
+        with open(os.path.join(folder_path, "result_long_term_forecast.txt"), "a") as f:
             f.write(setting + "\n")
             f.write(f"mse:{mse}, mae:{mae}\n\n")
 

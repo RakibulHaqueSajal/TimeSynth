@@ -11,6 +11,7 @@ from utils.print_args import print_args
 import random
 import numpy as np
 from utils.str2bool import str2bool
+from utils.config import resolve_run, result_dir_for
 
 if __name__ == '__main__':
    
@@ -41,7 +42,35 @@ if __name__ == '__main__':
                         help='forecasting task, options:[M, S, MS]; M:multivariate, S:univariate, MS:multivariate to univariate')
     parser.add_argument('--target', type=str, default='Value', help='target feature in univariate task')
     parser.add_argument('--freq', type=str, default='h', help='frequency of time features encoding')
-    parser.add_argument('--checkpoints', type=str, default='/uufs/sci.utah.edu/projects/medvic-lab/Rakib/Time_Series/Time_Series_Forecast/checkpoints', help='location of model checkpoints')
+    parser.add_argument('--checkpoints', type=str, default=None,
+                        help='(legacy alias of --checkpoint_dir)')
+
+    # --- P0.2: revision runner -------------------------------------------------
+    parser.add_argument('--model_config', type=str, default=None,
+                        help='configs/models/<name>.yaml (or a path); sets model hyperparameters')
+    parser.add_argument('--paradigm_config', type=str, default=None,
+                        help='configs/paradigms/<name>.yaml (or a path); sets data location and windows')
+    parser.add_argument('--signal', type=str, default=None, help='signal family key inside the paradigm config')
+    parser.add_argument('--condition', type=str, default=None,
+                        help='test-only condition key inside the paradigm config (e.g. SNR_3, bucket_p1)')
+    parser.add_argument('--model_label', type=str, default=None,
+                        help='name used in results/<paradigm>/<signal>/<model_label>/ (default: model, or YAML label)')
+    parser.add_argument('--results_dir', type=str, default='./results',
+                        help='root of results/{paradigm}/{signal}/{model}/seed{k}/')
+    parser.add_argument('--checkpoint_dir', type=str, default='./checkpoints', help='root of checkpoints')
+    parser.add_argument('--checkpoint_name', type=str, default=None,
+                        help='checkpoint folder name under --checkpoint_dir; default <setting>_seed<k>. '
+                             'Use it to evaluate a legacy (paper) checkpoint with --is_training 2')
+    parser.add_argument('--seeds', type=int, nargs='+', default=None,
+                        help='one run per seed (default: [--seed])')
+    parser.add_argument('--train_stride', type=int, default=1, help='window stride for the training split')
+    parser.add_argument('--eval_stride', type=int, default=1,
+                        help='window stride for val/test splits; seq_len+pred_len gives non-overlapping windows')
+    parser.add_argument('--test_drop_last', type=str2bool, default=True,
+                        help='drop the last partial test batch (paper behavior). Revision runs use False')
+    parser.add_argument('--fs', type=float, default=10.0, help='sampling rate in Hz (recorded in meta)')
+    parser.add_argument('--save_legacy_arrays', type=str2bool, default=True,
+                        help='also write test_{pred,true}_with_history.npy for the Statistical_Test scripts')
     parser.add_argument('--scale', type=bool, default=False, help='whether to scale the dataset')
     
     # Forecasting task
@@ -179,9 +208,20 @@ if __name__ == '__main__':
     parser.add_argument('--sample', type=float, default=0.01, help='Sampling percentage, the inference time of ARIMA and SARIMA is too long, you might sample 0.01')
 
     #For saving the states
-    parser.add_argument("--save_gt_state",type=bool,default=True,help="Save the States")
+    parser.add_argument("--save_gt_state",type=str2bool,default=True,help="Save GT states when the loader provides them")
     
     args = parser.parse_args()
+
+    # P0.2: merge YAML configs (explicit flags win), derive root_path and result labels
+    resolve_run(args)
+    if args.checkpoints:            # legacy alias
+        args.checkpoint_dir = args.checkpoints
+    args.checkpoints = args.checkpoint_dir
+    if args.seeds is None:
+        args.seeds = [args.seed]
+    if args.model_id == 'auto':
+        args.model_id = '{}_{}_{}_{}_{}'.format(args.model_label, args.seq_len, args.pred_len,
+                                                args.paradigm, args.signal)
 
     #For FITSf
     if args.cut_freq == 0:
@@ -203,9 +243,13 @@ if __name__ == '__main__':
     #For Statistial Models 
      
 
-    random.seed(args.seed)
-    torch.manual_seed(args.seed)
-    np.random.seed(args.seed)
+    def _seed_everything(seed):
+        random.seed(seed)
+        torch.manual_seed(seed)
+        torch.cuda.manual_seed_all(seed)
+        np.random.seed(seed)
+
+    _seed_everything(args.seed)
 
 
     if torch.cuda.is_available() and args.use_gpu:
@@ -222,29 +266,45 @@ if __name__ == '__main__':
     
     print(args.is_training)
 
+    setting = '{}_{}_{}_{}_{}'.format(args.task_name, args.model_id, args.weight_decay,
+                                      args.learning_rate, args.patch_len)
+
     if args.is_training==1 and args.stat_model==False:
-        for ii in range(args.itr):  # Number of iterations  
+        for seed in args.seeds:
+            args.seed = seed
+            _seed_everything(seed)
+            args.run_dir = result_dir_for(args, seed)
+            args.ckpt_name = args.checkpoint_name or f'{setting}_seed{seed}'
+            if os.path.exists(os.path.join(args.run_dir, 'pred.npy')):
+                print(f'[skip] {args.run_dir} already has pred.npy')
+                continue
             Exp = Exp_Long_Term_Forecast
             exp = Exp(args)  # Initialize experiment
-            print(f'Starting training iteration: {ii + 1}')
-            setting = '{}_{}_{}_{}_{}'.format(args.task_name, args.model_id,args.weight_decay,args.learning_rate,args.patch_len)
+            print(f'Starting training seed {seed}')
 
-            print('>>>>>>> Start training: {} >>>>>>>>>>>>>>>>>>>>>>>>>>'.format(setting))
+            print('>>>>>>> Start training: {} >>>>>>>>>>>>>>>>>>>>>>>>>>'.format(args.ckpt_name))
             exp.train(setting)
 
-            print('>>>>>>> Testing: {} <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'.format(setting))
+            print('>>>>>>> Testing: {} <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'.format(args.ckpt_name))
             exp.test(setting)
             
             torch.cuda.empty_cache()
           # exp.plot_model_structure()
 
     elif args.is_training==2 and args.stat_model==False:
-        
-        Exp=Exp_Long_Term_Forecast_Test_Dist
-        exp=Exp(args)
-        setting = '{}_{}_{}_{}_{}'.format(args.task_name, args.model_id,args.weight_decay,args.learning_rate,args.patch_len)
-        exp.test(setting,args.distribution_number,test=1)
-        torch.cuda.empty_cache()
+        # test-only: evaluate a trained checkpoint on another condition (noise, shift, markov p)
+        for seed in args.seeds:
+            args.seed = seed
+            _seed_everything(seed)
+            args.run_dir = result_dir_for(args, seed)
+            args.ckpt_name = args.checkpoint_name or f'{setting}_seed{seed}'
+            if os.path.exists(os.path.join(args.run_dir, 'pred.npy')):
+                print(f'[skip] {args.run_dir} already has pred.npy')
+                continue
+            Exp=Exp_Long_Term_Forecast_Test_Dist
+            exp=Exp(args)
+            exp.test(setting,args.distribution_number,test=1)
+            torch.cuda.empty_cache()
 
         
     # else:

@@ -1,0 +1,25 @@
+# Paper-era Markov paradigm: per-p directories, per-sample switching (A3/A4). Kept only so
+# the legacy numbers can be regenerated; Phase 4 replaces it with markov_dwell.yaml.
+name: markov_legacy
+fs: 10.0
+data_root_rel: ""
+signals:
+  Single_Phase_Modulation: PhaseMod_Single_Freq_TwoState
+args:
+  data: custom
+  task_name: long_term_forecast
+  features: S
+  target: Value
+  enc_in: 1
+  seq_len: 50
+  label_len: 0
+  pred_len: 100
+  train_stride: 1
+  eval_stride: 150
+  test_drop_last: false
+conditions:
+  p_0.1: "{signal}/p_0.10000"
+  p_0.5: "{signal}/p_0.50000"
+  p_0.9: "{signal}/p_0.90000"
+  p_0.3: "{signal}_Extended/p_0.30000"
+  p_0.7: "{signal}_Extended/p_0.70000"

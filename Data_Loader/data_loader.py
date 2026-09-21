@@ -238,6 +238,8 @@ def data_provider(args, flag):
         freq=args.freq,
         random_sample_size=random_sample_size,
         random_seed=random_seed,
+        # P0.2: window strides. Defaults reproduce the paper (stride 1 everywhere).
+        stride=(getattr(args, "train_stride", 1) if flag == "train" else getattr(args, "eval_stride", 1)),
     )
 
     if flag == "train":
@@ -250,7 +252,8 @@ def data_provider(args, flag):
         batch_size = args.batch_size
     elif flag in ["test", "pred"]:
         shuffle_flag = False
-        drop_last = (flag == "test")
+        # legacy runs dropped the last partial test batch; revision runs keep every window
+        drop_last = (flag == "test") and bool(getattr(args, "test_drop_last", True))
         batch_size = (1 if flag == "pred" else args.batch_size)
     else:
         raise ValueError(f"Unknown flag: {flag}")

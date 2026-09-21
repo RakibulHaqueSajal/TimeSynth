@@ -18,6 +18,7 @@ from torch.optim import lr_scheduler
 from torchview import draw_graph
 import matplotlib.pyplot as plt
 from utils.loss import hybrid_loss,ncc_loss
+from utils.results_io import build_meta, write_run_outputs
 
 
 disable_flag=True
@@ -153,7 +154,7 @@ class Exp_Long_Term_Forecast(Exp_Basic):
         vali_data, vali_loader = self._get_data(flag='val')
         test_data, test_loader = self._get_data(flag='test')
 
-        path = os.path.join(self.args.checkpoints, setting)
+        path = os.path.join(self.args.checkpoint_dir, getattr(self.args, 'ckpt_name', setting))
         if not os.path.exists(path):
             os.makedirs(path)
 
@@ -332,15 +333,14 @@ class Exp_Long_Term_Forecast(Exp_Basic):
 
     def test(self, setting, test=0):
         test_data, test_loader = self._get_data(flag='test')
+        ckpt_dir = os.path.join(self.args.checkpoint_dir, getattr(self.args, 'ckpt_name', setting))
         if test:
-            print('loading model')
-            self.model.load_state_dict(
-                torch.load(os.path.join('/scratch_hd/Long_Time_Series_Forecasting/checkpoints/' + setting, 'checkpoint.pth'))
-            )
+            print('loading model from', ckpt_dir)
+            self.model.load_state_dict(torch.load(os.path.join(ckpt_dir, 'checkpoint.pth')))
 
-        preds, trues = [], []
+        preds, trues, hists = [], [], []
         print(setting)
-        folder_path = './Changing_F1_Mod/' + setting + '/'
+        folder_path = getattr(self.args, 'run_dir', None) or os.path.join(self.args.results_dir, setting)
         if not os.path.exists(folder_path):
             os.makedirs(folder_path)
 
@@ -434,11 +434,12 @@ class Exp_Long_Term_Forecast(Exp_Basic):
 
                 preds.append(outputs)
                 trues.append(tgt_y)
+                hists.append(batch_x.detach().cpu().numpy()[:, :, f_dim:])
 
                 # --------------------------
                 # Visualization every 20 iters
                 # --------------------------
-                if i % 20 == 0:
+                if i % 20 == 0 and getattr(self.args, 'save_plots', False):
                     raw_input_np = batch_x.detach().cpu().numpy()
                     if test_data.scale and self.args.inverse:
                         shape_in = raw_input_np.shape
@@ -470,10 +471,12 @@ class Exp_Long_Term_Forecast(Exp_Basic):
 
         preds = preds.reshape(-1, preds.shape[-2], preds.shape[-1])
         trues = trues.reshape(-1, trues.shape[-2], trues.shape[-1])
+        hists = np.concatenate(hists, axis=0)
 
-        # Error visualizations
-        visual_multivariate_error_distribution(trues, preds, os.path.join(folder_path, "Error.pdf"))
-        visual_relative_error_distribution(trues, preds, os.path.join(folder_path, "Relative.pdf"))
+        # Error visualizations (optional)
+        if getattr(self.args, 'save_plots', False):
+            visual_multivariate_error_distribution(trues, preds, os.path.join(folder_path, "Error.pdf"))
+            visual_relative_error_distribution(trues, preds, os.path.join(folder_path, "Relative.pdf"))
         print(trues.shape)
         print(preds.shape)
 
@@ -497,13 +500,15 @@ class Exp_Long_Term_Forecast(Exp_Basic):
         mae, mse, rmse, mape, mspe = metric(preds, trues)
         print('mse:{}, mae:{}, dtw:{}'.format(mse, mae, dtw))
 
-        with open("result_long_term_forecast.txt", 'a') as f:
+        with open(os.path.join(folder_path, "result_long_term_forecast.txt"), 'a') as f:
             f.write(setting + "  \n")
             f.write('mse:{}, mae:{}, dtw:{}'.format(mse, mae, dtw))
             f.write('\n\n')
 
-        np.save(os.path.join(folder_path, 'metrics.npy'), np.array([mae, mse, rmse, mape, mspe]))
-        np.save(os.path.join(folder_path, 'pred.npy'), preds)
-        np.save(os.path.join(folder_path, 'true.npy'), trues)
-
+        # P0.2 layout: pred.npy, true.npy, hist.npy, meta.parquet (+ legacy arrays)
+        meta = build_meta(self.args, preds.shape[0], dataset=test_data)
+        write_run_outputs(self.args, folder_path, hists, trues, preds, meta,
+                          metrics=[mae, mse, rmse, mape, mspe],
+                          save_legacy=getattr(self.args, 'save_legacy_arrays', True))
+        print('saved results to', folder_path)
         return

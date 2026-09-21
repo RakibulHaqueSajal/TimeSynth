@@ -1,0 +1,24 @@
+# Source: slurm/run_CNN.sh (34 training blocks); checkpoint names confirm wd=0.0, lr=1e-3
+# The scripts pass --dropout twice (0.4 then 0.2); argparse keeps the last value, 0.2.
+model: ModernTCN
+label: ModernTCN
+args:
+  learning_rate: 0.001
+  weight_decay: 0.0
+  train_epochs: 300
+  patience: 30
+  ffn_ratio: 4
+  patch_size: 20
+  patch_stride: 10
+  num_blocks: [2, 2, 2, 2]
+  large_size: [21, 19, 17, 13]
+  small_size: [3, 3, 3, 3]
+  dims: [64, 128, 256, 512]
+  head_dropout: 0.1
+  dropout: 0.2
+  use_multi_scale: true
+  small_kernel_merged: true
+  mlp_dropout: 0.3
+  backcast: 0
+  batch_size: 128
+  lradj: TST

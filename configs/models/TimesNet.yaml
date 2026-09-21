@@ -1,0 +1,20 @@
+# P2.1: published defaults (Wu et al., ICLR 2023) scaled to this benchmark. Training protocol
+# matches the other transformer-family models (lr 1e-4, wd 1e-4, 300 epochs, patience 30).
+model: TimesNet
+label: TimesNet
+args:
+  learning_rate: 0.0001
+  weight_decay: 0.0001
+  train_epochs: 300
+  patience: 30
+  e_layers: 2
+  d_model: 64
+  d_ff: 64
+  top_k: 3
+  num_kernels: 6
+  dropout: 0.1
+  dec_in: 1
+  c_out: 1
+  backcast: 0
+  batch_size: 128
+  lradj: TST

@@ -1,0 +1,21 @@
+# Source: slurm/run_CNN.sh, slurm/cnn_micn.sh (36 training blocks); checkpoint names confirm wd=1e-4, lr=1e-4
+# label_len 50 is passed in the scripts but Dataset_Custom forces label_len=0 for all splits.
+model: MICN
+label: MICN_Regre
+args:
+  mode: regre
+  learning_rate: 0.0001
+  weight_decay: 0.0001
+  train_epochs: 300
+  patience: 30
+  conv_kernel: [7, 17]
+  decomp_kernel: [25, 49]
+  isometric_kernel: [17, 49]
+  label_len: 50
+  dec_in: 1
+  c_out: 1
+  hidden_dims: [256, 512]
+  mlp_dropout: 0.3
+  backcast: 0
+  batch_size: 128
+  lradj: TST

@@ -1,0 +1,11 @@
+# Source: slurm/run_linear.sh (14 training blocks); checkpoint names confirm wd=0.001, lr=1e-4
+model: Linear
+label: Linear
+args:
+  learning_rate: 0.0001
+  weight_decay: 0.001
+  train_epochs: 200
+  patience: 70
+  backcast: 0
+  batch_size: 128
+  lradj: TST

@@ -74,3 +74,6 @@ fidelity_metric_illustration/*.png
 *.pt
 *.pth
 *.ckpt
+
+# Revision outputs (P0.2)
+/results/

@@ -1,0 +1,25 @@
+# Clean baseline paradigm (Fig. 3). Three signal families, 70/10/20 signals per split,
+# 10 Hz, 50-sample history, 100-sample horizon. Paper runs used stride 1 and drop_last=True
+# on the test loader; the revision keeps every window and uses non-overlapping test windows.
+name: clean
+fs: 10.0
+data_root_rel: Noise
+signals:
+  Drift_Harmonic: Drift_Harmonic_Test/Clean
+  Single_Phase_Modulation: PhaseMod_SingleFreq/clean
+  Dual_Phase_Modulation: PhaseMod_TwoFreq/clean
+args:
+  data: custom
+  task_name: long_term_forecast
+  features: S
+  target: Value
+  enc_in: 1
+  seq_len: 50
+  label_len: 0
+  pred_len: 100
+  train_sample_size: 70
+  val_sample_size: 10
+  test_sample_size: 20
+  train_stride: 1
+  eval_stride: 150      # seq_len + pred_len: no two test windows share a sample (R4.6)
+  test_drop_last: false

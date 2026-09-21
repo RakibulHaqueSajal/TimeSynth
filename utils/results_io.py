@@ -119,3 +119,51 @@ def load_result(out_dir: str):
     if os.path.exists(s_fp):
         return hist, true, pred, meta, np.load(s_fp).astype(float)
     return hist, true, pred, meta
+
+
+# ---------------------------------------------------------------------------
+# Runner glue (P0.2)
+# ---------------------------------------------------------------------------
+def build_meta(args, n_windows: int, dataset=None, tags=None, seed=None) -> pd.DataFrame:
+    """
+    One row per saved test window. Uses ``dataset.meta`` (file_id, file_name,
+    window_start) when the loader provides it, else per-window ``tags`` from the
+    tag-aware loaders, else a bare index. Condition labels come from ``args``.
+    """
+    if dataset is not None and getattr(dataset, "meta", None):
+        m = list(dataset.meta)[:n_windows]
+        df = pd.DataFrame(m, columns=["file_id", "file_name", "window_start"])
+    else:
+        df = pd.DataFrame({"file_id": np.arange(n_windows), "file_name": "", "window_start": -1})
+    if len(df) != n_windows:
+        raise ValueError(f"meta has {len(df)} rows but {n_windows} windows were saved")
+    df["tag"] = (list(tags)[:n_windows] if tags is not None else "")
+    df["paradigm"] = getattr(args, "paradigm", "")
+    df["signal"] = getattr(args, "signal", "")
+    df["condition"] = getattr(args, "condition", None) or ""
+    df["model"] = getattr(args, "model_label", getattr(args, "model", ""))
+    df["seed"] = int(seed if seed is not None else getattr(args, "seed", -1))
+    df["fs"] = float(getattr(args, "fs", np.nan))
+    df["seq_len"] = int(args.seq_len)
+    df["pred_len"] = int(args.pred_len)
+    df["eval_stride"] = int(getattr(args, "eval_stride", 1))
+    return df
+
+
+def write_run_outputs(args, out_dir: str, hist, true, pred, meta: pd.DataFrame,
+                      metrics=None, samples=None, save_legacy: bool = True) -> None:
+    """Write the P0.2 layout and, optionally, the legacy *_with_history arrays."""
+    save_result(out_dir, pred, true, hist, meta, samples=samples)
+    if metrics is not None:
+        np.save(os.path.join(out_dir, "metrics.npy"), np.asarray(metrics))
+    if save_legacy:
+        h, t, p = (np.asarray(a, np.float32) for a in (hist, true, pred))
+        if h.ndim == 2: h = h[..., None]
+        if t.ndim == 2: t = t[..., None]
+        if p.ndim == 2: p = p[..., None]
+        np.save(os.path.join(out_dir, "test_true_with_history.npy"), np.concatenate([h, t], axis=1))
+        np.save(os.path.join(out_dir, "test_pred_with_history.npy"), np.concatenate([h, p], axis=1))
+    with open(os.path.join(out_dir, "args.json"), "w") as f:
+        import json
+        json.dump({k: (v if isinstance(v, (int, float, str, bool, list, type(None))) else str(v))
+                   for k, v in vars(args).items()}, f, indent=1, sort_keys=True)

@@ -1,0 +1,42 @@
+# Frequency distribution shift (Fig. 5): test-only evaluation of the clean checkpoints on
+# five frequency buckets per family (test split only exists). Bucket 0 is the in-distribution band.
+name: shift
+fs: 10.0
+data_root_rel: Distribution_Shift
+signals:
+  Drift_Harmonic: Drift_Harmonic
+  Single_Phase_Modulation: Phasemod_SingleFreq
+  Dual_Phase_Modulation: Phasemod_TwoFreq
+args:
+  data: custom
+  task_name: long_term_forecast
+  features: S
+  target: Value
+  enc_in: 1
+  seq_len: 50
+  label_len: 0
+  pred_len: 100
+  test_sample_size: 20
+  eval_stride: 150
+  test_drop_last: false
+conditions:
+  bucket_0:
+    Drift_Harmonic: Drift_Harmonic/f_0.85_1.10
+    Single_Phase_Modulation: Phasemod_SingleFreq/f_0.680_1.410
+    Dual_Phase_Modulation: Phasemod_TwoFreq/f0_0.68_1.41__f1_0.68_1.41
+  bucket_m2:
+    Drift_Harmonic: Drift_Harmonic/f_0.35_0.60
+    Single_Phase_Modulation: Phasemod_SingleFreq/f_0.000_0.340
+    Dual_Phase_Modulation: Phasemod_TwoFreq/f0_0.00_0.34__f1_0.00_0.34
+  bucket_m1:
+    Drift_Harmonic: Drift_Harmonic/f_0.60_0.85
+    Single_Phase_Modulation: Phasemod_SingleFreq/f_0.340_0.680
+    Dual_Phase_Modulation: Phasemod_TwoFreq/f0_0.34_0.68__f1_0.34_0.68
+  bucket_p1:
+    Drift_Harmonic: Drift_Harmonic/f_1.10_1.35
+    Single_Phase_Modulation: Phasemod_SingleFreq/f_1.410_2.140
+    Dual_Phase_Modulation: Phasemod_TwoFreq/f0_1.41_2.14__f1_1.41_2.14
+  bucket_p2:
+    Drift_Harmonic: Drift_Harmonic/f_1.35_1.60
+    Single_Phase_Modulation: Phasemod_SingleFreq/f_2.140_2.880
+    Dual_Phase_Modulation: Phasemod_TwoFreq/f0_2.14_2.88__f1_2.14_2.88
