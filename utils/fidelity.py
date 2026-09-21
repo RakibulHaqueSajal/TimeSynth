@@ -30,6 +30,7 @@ __all__ = [
     "peak_detection_f1", "rr_interval_error",
     "crps_empirical",
     "peak_freq_rfft_with_confidence", "analytic_signal_fft", "wrap_to_pi",
+    "peak_freq_batch", "analytic_signal_batch",
 ]
 
 
@@ -119,6 +120,37 @@ def peak_freq_rfft_with_confidence(
     return float(f_est), bool(reliable)
 
 
+def peak_freq_batch(X, fs: float, peak_frac_thresh: float = 0.1,
+                    power_thresh: float = 1e-8) -> Tuple[np.ndarray, np.ndarray]:
+    """
+    Vectorized ``peak_freq_rfft_with_confidence`` over rows of ``X`` [N, H]
+    (DC dropped, parabolic refinement). Returns (f_est [N], reliable [N]).
+    Numerically identical to the per-row function.
+    """
+    X = np.asarray(X, float)
+    N, n = X.shape
+    if n <= 2:
+        return np.zeros(N), np.zeros(N, bool)
+    X = X - X.mean(axis=1, keepdims=True)
+    P = np.abs(np.fft.rfft(X, n=n, axis=1)) ** 2
+    total = P[:, 1:].sum(axis=1)
+    k = 1 + np.argmax(P[:, 1:], axis=1)
+    rows = np.arange(N)
+    f_est = k * (fs / n)
+    interior = (k > 0) & (k < P.shape[1] - 1)
+    ki = np.where(interior, k, 1)
+    denom = P[rows, ki - 1] - 2 * P[rows, ki] + P[rows, ki + 1]
+    num = 0.5 * (P[rows, ki - 1] - P[rows, ki + 1])
+    with np.errstate(divide="ignore", invalid="ignore"):
+        delta = np.where(np.abs(denom) < 1e-12, 0.0, num / denom)
+    f_est = np.where(interior, (k + delta) * (fs / n), f_est)
+    with np.errstate(divide="ignore", invalid="ignore"):
+        frac = np.where(total > 0, P[rows, k] / total, 0.0)
+    reliable = (total > power_thresh) & (frac >= peak_frac_thresh)
+    f_est = np.where(total > power_thresh, f_est, 0.0)
+    return f_est.astype(float), reliable
+
+
 def freq_error(
     pred,
     true,
@@ -132,15 +164,11 @@ def freq_error(
     NaN where either spectrum fails the reliability filter. Shape [N].
     """
     P, T = _pair(pred, true)
-    N = T.shape[0]
-    out = np.full(N, np.nan, float)
-    for i in range(N):
-        f_t, ok_t = peak_freq_rfft_with_confidence(
-            T[i], fs=fs, peak_frac_thresh=peak_frac_thresh, power_thresh=power_thresh)
-        f_p, ok_p = peak_freq_rfft_with_confidence(
-            P[i], fs=fs, peak_frac_thresh=peak_frac_thresh, power_thresh=power_thresh)
-        if ok_t and ok_p:
-            out[i] = abs(f_p - f_t)
+    f_t, ok_t = peak_freq_batch(T, fs, peak_frac_thresh, power_thresh)
+    f_p, ok_p = peak_freq_batch(P, fs, peak_frac_thresh, power_thresh)
+    out = np.full(T.shape[0], np.nan, float)
+    ok = ok_t & ok_p
+    out[ok] = np.abs(f_p[ok] - f_t[ok])
     return out
 
 
@@ -194,34 +222,46 @@ def phase_error_deg(
     low-amplitude regions. NaN where no valid samples exist. Shape [N].
     """
     P, T = _pair(pred, true)
-    N = T.shape[0]
+    N, n = T.shape
+    scale = 1.0 if unit == "rad" else (180.0 / np.pi)
+
+    zt = analytic_signal_batch(T, pad_factor=pad_factor)
+    zp = analytic_signal_batch(P, pad_factor=pad_factor)
+    At = np.abs(zt)
+    med = np.median(At, axis=1)
+    valid_row = np.isfinite(med) & (med != 0)
+    mask = At > (amp_frac_thresh * med)[:, None]
+    mask &= valid_row[:, None]
+
+    phi_t = np.unwrap(np.angle(zt), axis=1)
+    phi_p = np.unwrap(np.angle(zp), axis=1)
+    d = phi_p - phi_t
+    d = np.unwrap(d, axis=1)                       # wrap_to_pi: unwrap ...
+    d = (d + np.pi) % (2 * np.pi) - np.pi          # ... then wrap to (-pi, pi]
+    cnt = mask.sum(axis=1)
     out = np.full(N, np.nan, float)
-    to_unit = (lambda a: a) if unit == "rad" else (lambda a: np.degrees(a))
-
-    for i in range(N):
-        y = T[i] - T[i].mean()
-        yh = P[i] - P[i].mean()
-        zt = analytic_signal_fft(y, pad_factor=pad_factor)
-        zp = analytic_signal_fft(yh, pad_factor=pad_factor)
-
-        At = np.abs(zt)
-        med_amp = np.median(At)
-        if not np.isfinite(med_amp) or med_amp == 0:
-            continue
-
-        mask = At > (amp_frac_thresh * med_amp)
-        if not np.any(mask):
-            continue
-
-        phi_t = np.unwrap(np.angle(zt))
-        phi_p = np.unwrap(np.angle(zp))
-        dphi = wrap_to_pi(phi_p - phi_t)
-
-        sel = dphi[mask]
-        if sel.size == 0:
-            continue
-        out[i] = float(np.mean(np.abs(to_unit(sel))))
+    ok = cnt > 0
+    out[ok] = (np.abs(d) * mask).sum(axis=1)[ok] / cnt[ok] * scale
     return out
+
+
+def analytic_signal_batch(X, pad_factor: int = 2) -> np.ndarray:
+    """Row-wise ``analytic_signal_fft`` for X [N, n]. Identical numerics."""
+    X = np.asarray(X, float)
+    N, n = X.shape
+    X = X - X.mean(axis=1, keepdims=True)
+    pad_factor = 1 if (pad_factor is None or pad_factor < 1) else int(pad_factor)
+    n_fft = int(pad_factor * n)
+    F_ = np.fft.fft(X, n=n_fft, axis=1)
+    H = np.zeros(n_fft, float)
+    if n_fft % 2 == 0:
+        H[0] = 1.0
+        H[n_fft // 2] = 1.0
+        H[1:n_fft // 2] = 2.0
+    else:
+        H[0] = 1.0
+        H[1:(n_fft + 1) // 2] = 2.0
+    return np.fft.ifft(F_ * H[None, :], n=n_fft, axis=1)[:, :n]
 
 
 # ---------------------------------------------------------------------------

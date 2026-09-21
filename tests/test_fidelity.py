@@ -212,3 +212,29 @@ def _old_freq_one(mod, yh, y, fs=10.0):
     f_t, ok_t = mod._peak_freq_rfft_with_confidence(y, fs=fs)
     f_p, ok_p = mod._peak_freq_rfft_with_confidence(yh, fs=fs)
     return abs(f_p - f_t) if (ok_t and ok_p) else np.nan
+
+
+# ---------------------------------------------------- vectorized == loop
+def test_vectorized_matches_reference_loop():
+    """The batched phase/frequency code must equal the per-row reference to 1e-9."""
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import _legacy_metrics as L
+    rng = np.random.default_rng(3)
+    N = 300
+    f = rng.uniform(0.6, 1.4, N)
+    ph = rng.uniform(-np.pi, np.pi, N)
+    true = np.sin(2 * np.pi * f[:, None] * t + ph[:, None]) + 0.05 * rng.normal(size=(N, H))
+    pred = np.sin(2 * np.pi * (f + rng.normal(0, 0.05, N))[:, None] * t + (ph + 0.3)[:, None]) \
+        + 0.3 * rng.normal(size=(N, H))
+    pred[:5] = 0.0                     # flat predictions -> unreliable spectrum
+    true[5:8] = 0.0                    # flat truth -> NaN phase
+    ref_ph = np.array([_old_phase_one(L, pred[i], true[i]) for i in range(N)])
+    ref_fr = np.array([_old_freq_one(L, pred[i], true[i]) for i in range(N)])
+    new_ph = F.phase_error_deg(pred, true)
+    new_fr = F.freq_error(pred, true, fs=FS)
+    assert np.array_equal(np.isnan(ref_ph), np.isnan(new_ph))
+    assert np.array_equal(np.isnan(ref_fr), np.isnan(new_fr))
+    m = ~np.isnan(ref_ph)
+    assert np.max(np.abs(ref_ph[m] - new_ph[m])) < 1e-9
+    m = ~np.isnan(ref_fr)
+    assert np.max(np.abs(ref_fr[m] - new_fr[m])) < 1e-9
