@@ -1,0 +1,74 @@
+{
+ "eq_A7": {
+  "global_f_range_Hz": [
+   0.6782,
+   1.4112
+  ],
+  "f0_range_Hz": [
+   0.71485,
+   0.86145
+  ],
+  "f1_range_Hz": [
+   1.08135,
+   1.22795
+  ],
+  "rule": "f0 = f_low + [0.05, 0.25] * span; f1 = f_low + [0.55, 0.75] * span",
+  "source": "Bio_Synthesize/Synthetic_Signals_bio/single_phase_modulation_markov.py::make_well_separated_freq_ranges"
+ },
+ "markov_legacy": {
+  "switching": "per sample, P(switch)=p at every sample (simulate_two_state_chain)",
+  "fs_Hz": 10,
+  "duration_s": 300,
+  "transition_probs_generated": {
+   "PhaseMod_Single_Freq_TwoState": [
+    0,
+    0.1,
+    0.5,
+    0.9,
+    1.0
+   ],
+   "PhaseMod_Single_Freq_TwoState_Extended": [
+    0.3,
+    0.7
+   ]
+  },
+  "paper_reported_p": [
+   0.1,
+   0.3,
+   0.5,
+   0.7,
+   0.9
+  ],
+  "training": "per-p directories (C1: per-p training confirmed from checkpoint names and data layout)",
+  "mean_dwell_s_at_p": {
+   "0.1": 1.0,
+   "0.3": 0.3333333333333333,
+   "0.5": 0.2,
+   "0.7": 0.14285714285714285,
+   "0.9": 0.1111111111111111
+  }
+ },
+ "param_bounds": {
+  "A": [
+   0.1,
+   0.1227
+  ],
+  "f": [
+   0.6782,
+   1.4112
+  ],
+  "beta": [
+   0.01,
+   0.3
+  ],
+  "fmod": [
+   0.01,
+   0.1
+  ],
+  "offset": [
+   0.1937,
+   0.7418
+  ]
+ },
+ "tsmixer_commit": "6f356a6"
+}

@@ -77,3 +77,6 @@ fidelity_metric_illustration/*.png
 
 # Revision outputs (P0.2)
 /results/
+
+# P0.4 per-window metric cache (regenerable)
+analysis/p0_reanalysis/cache/

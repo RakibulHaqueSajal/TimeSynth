@@ -1,0 +1,1 @@
+long_term_forecast_ModernTCN_50_100_ModernTCN_Drift_Harmonic_Clean_70_10_20_0.0_0.001_16_SNR_Level_4
