@@ -12,6 +12,17 @@ import csv
 import math
 import pandas as pd
 
+# --- P0.1: metrics are defined once in utils/fidelity.py ---------------------
+import sys as _sys
+_sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from utils import fidelity as _F
+from utils.fidelity import (
+    peak_freq_rfft_with_confidence as _peak_freq_rfft_with_confidence,
+    analytic_signal_fft as _analytic_signal_fft,
+    wrap_to_pi as _wrap_to_pi,
+)
+
+
 
 # -------------------------
 # Helpers
@@ -106,298 +117,47 @@ def add_family_from_fmt(
 
 
 
-def _analytic_signal_fft(x, pad_factor=2, smooth_win=None):
-    """
-    Analytic signal via FFT (Hilbert transform without scipy), with a few
-    stabilizing tricks for low-amplitude / noisy signals:
-
-    - optional moving-average smoothing before Hilbert (smooth_win)
-    - zero-padding in FFT (pad_factor) to reduce edge effects
-    - mean removal to avoid DC dominating
-
-    Parameters
-    ----------
-    x : array_like
-        Real-valued input signal, shape (N,).
-    pad_factor : int, optional
-        Factor by which to zero-pad the FFT length. pad_factor=1 -> no padding.
-        pad_factor=2 (default) often helps with smoother phase.
-    smooth_win : int or None, optional
-        If not None and >1, applies a simple moving-average of this window
-        length before computing the analytic signal. This greatly stabilizes
-        the Hilbert transform in low-SNR regions.
-
-    Returns
-    -------
-    z : ndarray of complex
-        Analytic signal z = x_smooth + j*H{x_smooth}, cropped to original length.
-    """
-    x = np.asarray(x, dtype=float)
-    n = x.size
-
-    # Remove mean to avoid large DC term dominating the Hilbert transform
-    x = x - x.mean()
-
-    # Optional smoothing to reduce high-frequency noise that blows up phase
-    if smooth_win is not None and smooth_win > 1:
-        # Simple moving average, zero-phase-ish via 'same' mode
-        kernel = np.ones(int(smooth_win), dtype=float) / float(smooth_win)
-        x = np.convolve(x, kernel, mode="same")
-
-    # Zero-padding for more stable FFT-based Hilbert transform
-    if pad_factor is None or pad_factor < 1:
-        pad_factor = 1
-    n_fft = int(pad_factor * n)
-
-    X = np.fft.fft(x, n=n_fft)
-
-    # Construct frequency-domain Hilbert transform multiplier
-    H = np.zeros(n_fft, dtype=float)
-    if n_fft % 2 == 0:
-        # even length
-        H[0] = 1.0
-        H[n_fft // 2] = 1.0
-        H[1:n_fft // 2] = 2.0
-    else:
-        # odd length
-        H[0] = 1.0
-        H[1:(n_fft + 1) // 2] = 2.0
-
-    z_full = np.fft.ifft(X * H, n=n_fft)
-
-    # Crop back to original length
-    z = z_full[:n]
-    return z
-
-
-def _wrap_to_pi(ang):
-    """
-    Wrap angle array to (-pi, pi], but first enforce temporal continuity
-    with np.unwrap to reduce spurious jumps in low-amplitude regions.
-
-    This is helpful when you're computing instantaneous phase from a Hilbert
-    transform and want a stable, smooth phase trajectory.
-    """
-    ang = np.asarray(ang, dtype=float)
-
-    # First unwrap to make it continuous over time
-    ang_unwrapped = np.unwrap(ang)
-
-    # Then wrap back to (-pi, pi]
-    return (ang_unwrapped + np.pi) % (2 * np.pi) - np.pi
-
-
-def _per_series_phase_error_for_model(
-    model_path,
-    split: str = "test",
-    history_len: int = 50,
-    unit: str = "rad",
-    amp_frac_thresh: float = 0.2,
-):
-    """
-    Per-series mean |Δphase| with amplitude-thresholded masking.
-
-    - Analytic signal via FFT Hilbert.
-    - Phase is evaluated ONLY where the TRUE amplitude is reliable:
-        A_true > amp_frac_thresh * median(A_true)
-    - This avoids spurious phase spikes in low-amplitude regions.
-    - If no valid region → NaN for that series.
-    """
-
+def _per_series_phase_error_for_model(model_path, split="test", history_len=50,
+                                      unit="rad", amp_frac_thresh=0.2):
+    """Per-series mean |dphi| with amplitude masking (utils.fidelity.phase_error_deg)."""
     true = np.load(os.path.join(model_path, f"{split}_true_with_history.npy"))
     pred = np.load(os.path.join(model_path, f"{split}_pred_with_history.npy"))
-    if true.ndim == 3:
-        true = true.squeeze(-1)
-    if pred.ndim == 3:
-        pred = pred.squeeze(-1)
-
-    Y  = true[:, history_len:]     # (N, H)
-    YH = pred[:, history_len:]     # (N, H)
-
-    N, H = Y.shape
-    errs = np.full(N, np.nan)
-
-    to_unit = (lambda a: a) if unit == "rad" else (lambda a: np.degrees(a))
-
-    for i in range(N):
-        y  = Y[i]  - Y[i].mean()
-        yh = YH[i] - YH[i].mean()
-
-        # analytic signals
-        zt = _analytic_signal_fft(y)
-        zp = _analytic_signal_fft(yh)
-
-        At = np.abs(zt)
-        Ap = np.abs(zp)
-
-        # amplitude threshold from TRUE signal only
-        med_amp = np.median(At)
-        if not np.isfinite(med_amp) or med_amp == 0:
-            continue
-
-        amp_thresh = amp_frac_thresh * med_amp
-        mask = At > amp_thresh
-
-        if not np.any(mask):
-            continue
-
-        # unwrap before difference
-        phi_t = np.unwrap(np.angle(zt))
-        phi_p = np.unwrap(np.angle(zp))
-
-        # wrapped phase difference
-        dphi = _wrap_to_pi(phi_p - phi_t)
-        dphi_sel = dphi[mask]
-
-        if dphi_sel.size == 0:
-            continue
-
-        errs[i] = np.mean(np.abs(to_unit(dphi_sel)))
-
-    return errs
+    if true.ndim == 3: true = true.squeeze(-1)
+    if pred.ndim == 3: pred = pred.squeeze(-1)
+    return _F.phase_error_deg(pred[:, history_len:], true[:, history_len:], unit=unit,
+                              amp_frac_thresh=amp_frac_thresh)
 
 
 # -------------------------
 # MAE / MSE metrics
 # -------------------------
 def _per_series_mae_for_model(model_path, split="test", history_len=50):
-    """
-    Returns array of per-series MAE averaged over the forecast horizon. Shape: (N_series,)
-    """
+    """Per-series MAE over the horizon (utils.fidelity.mae)."""
     true = np.load(os.path.join(model_path, f"{split}_true_with_history.npy"))
     pred = np.load(os.path.join(model_path, f"{split}_pred_with_history.npy"))
-    if true.ndim == 3:
-        true = true.squeeze(-1)
-    if pred.ndim == 3:
-        pred = pred.squeeze(-1)
-    Y = true[:, history_len:]   # (N, H)
-    YH = pred[:, history_len:]  # (N, H)
-    return np.mean(np.abs(YH - Y), axis=1)
+    if true.ndim == 3: true = true.squeeze(-1)
+    if pred.ndim == 3: pred = pred.squeeze(-1)
+    return _F.mae(pred[:, history_len:], true[:, history_len:])
 
 
 def _per_series_mse_for_model(model_path, split="test", history_len=50):
-    """
-    Returns array of per-series MSE averaged over the forecast horizon. Shape: (N_series,)
-    """
+    """Per-series MSE over the horizon (utils.fidelity.mse)."""
     true = np.load(os.path.join(model_path, f"{split}_true_with_history.npy"))
     pred = np.load(os.path.join(model_path, f"{split}_pred_with_history.npy"))
-    if true.ndim == 3:
-        true = true.squeeze(-1)
-    if pred.ndim == 3:
-        pred = pred.squeeze(-1)
-    Y = true[:, history_len:]   # (N, H)
-    YH = pred[:, history_len:]  # (N, H)
-    return np.mean((YH - Y) ** 2, axis=1)
+    if true.ndim == 3: true = true.squeeze(-1)
+    if pred.ndim == 3: pred = pred.squeeze(-1)
+    return _F.mse(pred[:, history_len:], true[:, history_len:])
 
 
-def _peak_freq_rfft_with_confidence(
-    x,
-    fs: float = 1.0,
-    drop_dc: bool = True,
-    parabolic: bool = True,
-    peak_frac_thresh: float = 0.1,
-    power_thresh: float = 1e-8,
-):
-    """
-    Dominant frequency via one-sided rFFT, plus a reliability flag.
-
-    Returns:
-        (f_est, reliable) where:
-          - f_est: estimated dominant frequency (same units as fs)
-          - reliable: False if spectrum is too flat / low power.
-
-    Criteria:
-      - total spectral power (excluding DC if drop_dc) must exceed power_thresh
-      - dominant peak must explain at least peak_frac_thresh of total power
-    """
-    x = np.asarray(x, float)
-    x = x - x.mean()
-    n = len(x)
-    if n <= 2:
-        return 0.0, False
-
-    X = np.fft.rfft(x, n=n)
-    P = (np.abs(X) ** 2).astype(float)
-    f = np.fft.rfftfreq(n, d=1.0 / fs)
-
-    start = 1 if drop_dc else 0
-    total_power = P[start:].sum()
-    if total_power <= power_thresh:
-        return 0.0, False
-
-    k = start + int(np.argmax(P[start:]))
-
-    if (not parabolic) or k == 0 or k == len(P) - 1:
-        f_est = f[k]
-    else:
-        denom = (P[k - 1] - 2 * P[k] + P[k + 1])
-        if abs(denom) < 1e-12:
-            delta = 0.0
-        else:
-            delta = 0.5 * (P[k - 1] - P[k + 1]) / denom
-        f_est = (k + delta) * (fs / n)
-
-    peak_power = P[k]
-    frac = peak_power / total_power if total_power > 0 else 0.0
-    reliable = frac >= peak_frac_thresh
-
-    return float(f_est), bool(reliable)
-
-
-def _per_series_freq_error_for_model(
-    model_path,
-    split: str = "test",
-    history_len: int = 50,
-    fs: float = 1.0,
-    peak_frac_thresh: float = 0.1,
-    power_thresh: float = 1e-8,
-):
-    """
-    Robust per-series dominant-frequency error over the forecast horizon.
-
-    Uses _peak_freq_rfft_with_confidence to detect 'tampered'/flat spectra.
-    Returns:
-        errs[N], with NaN where either true or pred spectrum is unreliable.
-    """
+def _per_series_freq_error_for_model(model_path, split="test", history_len=50, fs=1.0,
+                                     peak_frac_thresh=0.1, power_thresh=1e-8):
+    """Per-series |f_pred - f_true| over the horizon (utils.fidelity.freq_error)."""
     true = np.load(os.path.join(model_path, f"{split}_true_with_history.npy"))
     pred = np.load(os.path.join(model_path, f"{split}_pred_with_history.npy"))
-    if true.ndim == 3:
-        true = true.squeeze(-1)
-    if pred.ndim == 3:
-        pred = pred.squeeze(-1)
-
-    Y = true[:, history_len:]   # (N, H)
-    YH = pred[:, history_len:]  # (N, H)
-
-    N = Y.shape[0]
-    errs = np.full(N, np.nan, dtype=float)
-
-    for i in range(N):
-        f_t, ok_t = _peak_freq_rfft_with_confidence(
-            Y[i],
-            fs=fs,
-            drop_dc=True,
-            parabolic=True,
-            peak_frac_thresh=peak_frac_thresh,
-            power_thresh=power_thresh,
-        )
-        f_p, ok_p = _peak_freq_rfft_with_confidence(
-            YH[i],
-            fs=fs,
-            drop_dc=True,
-            parabolic=True,
-            peak_frac_thresh=peak_frac_thresh,
-            power_thresh=power_thresh,
-        )
-
-        if not (ok_t and ok_p):
-            # mark as NaN -> filtered out in plotting
-            continue
-
-        errs[i] = abs(f_p - f_t)
-
-    return errs
-
+    if true.ndim == 3: true = true.squeeze(-1)
+    if pred.ndim == 3: pred = pred.squeeze(-1)
+    return _F.freq_error(pred[:, history_len:], true[:, history_len:], fs=fs,
+                         peak_frac_thresh=peak_frac_thresh, power_thresh=power_thresh)
 
 
 def build_models_by_shift_for_signal(

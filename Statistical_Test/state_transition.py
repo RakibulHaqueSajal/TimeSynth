@@ -28,6 +28,17 @@ from typing import Dict, List, Tuple, Optional, Any
 import numpy as np
 import pandas as pd
 
+# --- P0.1: metrics are defined once in utils/fidelity.py ---------------------
+import sys as _sys
+_sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from utils import fidelity as _F
+from utils.fidelity import (
+    peak_freq_rfft_with_confidence as _peak_freq_rfft_with_confidence,
+    analytic_signal_fft as _analytic_signal_fft,
+    wrap_to_pi as _wrap_to_pi,
+)
+
+
 
 # -------------------------
 # Basic utils
@@ -110,141 +121,29 @@ def _load_true_pred_with_history(model_path: str, split: str, tag: Optional[str]
 # -------------------------
 # Metrics (per-sequence, tag-aware)
 # -------------------------
-def per_series_mae(model_path: str, history_len: int, tag: str, split="test") -> np.ndarray:
+def per_series_mae(model_path, history_len=50, *args, split="test", **kw) -> np.ndarray:
+    """Per-series MAE over the horizon (utils.fidelity.mae)."""
+    tag = kw.pop("tag", args[0] if args else None)
     true, pred = _load_true_pred_with_history(model_path, split=split, tag=tag)
-    Y = true[:, history_len:]
-    YH = pred[:, history_len:]
-    return np.mean(np.abs(YH - Y), axis=1)
+    return _F.mae(pred[:, history_len:], true[:, history_len:])
 
 
-def _peak_freq_rfft_with_confidence(
-    x,
-    fs: float,
-    drop_dc: bool = True,
-    parabolic: bool = True,
-    peak_frac_thresh: float = 0.1,
-    power_thresh: float = 1e-8,
-):
-    x = np.asarray(x, float)
-    x = x - x.mean()
-    n = len(x)
-    if n <= 2:
-        return 0.0, False
-    X = np.fft.rfft(x, n=n)
-    P = (np.abs(X) ** 2).astype(float)
-    f = np.fft.rfftfreq(n, d=1.0 / fs)
-
-    start = 1 if drop_dc else 0
-    total_power = P[start:].sum()
-    if total_power <= power_thresh:
-        return 0.0, False
-
-    k = start + int(np.argmax(P[start:]))
-
-    if (not parabolic) or k == 0 or k == len(P) - 1:
-        f_est = f[k]
-    else:
-        denom = (P[k - 1] - 2 * P[k] + P[k + 1])
-        delta = 0.0 if abs(denom) < 1e-12 else 0.5 * (P[k - 1] - P[k + 1]) / denom
-        f_est = (k + delta) * (fs / n)
-
-    peak_power = P[k]
-    frac = peak_power / total_power if total_power > 0 else 0.0
-    reliable = frac >= peak_frac_thresh
-    return float(f_est), bool(reliable)
-
-
-def per_series_freq_error(
-    model_path: str,
-    history_len: int,
-    fs: float,
-    tag: str,
-    split="test",
-    peak_frac_thresh=0.1,
-    power_thresh=1e-8,
-) -> np.ndarray:
+def per_series_freq_error(model_path, history_len=50, fs=10.0, *args, split="test",
+                          peak_frac_thresh=0.1, power_thresh=1e-8, **kw) -> np.ndarray:
+    """Per-series |f_pred - f_true| over the horizon (utils.fidelity.freq_error)."""
+    tag = kw.pop("tag", args[0] if args else None)
     true, pred = _load_true_pred_with_history(model_path, split=split, tag=tag)
-    Y = true[:, history_len:]
-    YH = pred[:, history_len:]
-    N = Y.shape[0]
-    out = np.full(N, np.nan, float)
-    for i in range(N):
-        f_t, ok_t = _peak_freq_rfft_with_confidence(
-            Y[i], fs=fs, peak_frac_thresh=peak_frac_thresh, power_thresh=power_thresh
-        )
-        f_p, ok_p = _peak_freq_rfft_with_confidence(
-            YH[i], fs=fs, peak_frac_thresh=peak_frac_thresh, power_thresh=power_thresh
-        )
-        if ok_t and ok_p:
-            out[i] = abs(f_p - f_t)
-    return out
+    return _F.freq_error(pred[:, history_len:], true[:, history_len:], fs=fs,
+                         peak_frac_thresh=peak_frac_thresh, power_thresh=power_thresh)
 
 
-def _analytic_signal_fft(x, pad_factor=2):
-    x = np.asarray(x, float)
-    n = x.size
-    x = x - x.mean()
-    pad_factor = 1 if (pad_factor is None or pad_factor < 1) else int(pad_factor)
-    n_fft = int(pad_factor * n)
-    X = np.fft.fft(x, n=n_fft)
-    H = np.zeros(n_fft, float)
-    if n_fft % 2 == 0:
-        H[0] = 1.0
-        H[n_fft // 2] = 1.0
-        H[1:n_fft // 2] = 2.0
-    else:
-        H[0] = 1.0
-        H[1:(n_fft + 1) // 2] = 2.0
-    z_full = np.fft.ifft(X * H, n=n_fft)
-    return z_full[:n]
-
-
-def _wrap_to_pi(ang):
-    ang = np.asarray(ang, float)
-    ang_unwrapped = np.unwrap(ang)
-    return (ang_unwrapped + np.pi) % (2 * np.pi) - np.pi
-
-
-def per_series_phase_error(
-    model_path: str,
-    history_len: int,
-    tag: str,
-    unit: str = "deg",
-    split="test",
-    amp_frac_thresh: float = 0.2,
-) -> np.ndarray:
+def per_series_phase_error(model_path, history_len=50, *args, unit="deg", split="test",
+                           amp_frac_thresh=0.2, **kw) -> np.ndarray:
+    """Per-series mean |dphi| with amplitude masking (utils.fidelity.phase_error_deg)."""
+    tag = kw.pop("tag", args[0] if args else None)
     true, pred = _load_true_pred_with_history(model_path, split=split, tag=tag)
-    Y = true[:, history_len:]
-    YH = pred[:, history_len:]
-    N = Y.shape[0]
-    out = np.full(N, np.nan, float)
-    to_unit = (lambda a: a) if unit == "rad" else (lambda a: np.degrees(a))
-
-    for i in range(N):
-        y = Y[i] - Y[i].mean()
-        yh = YH[i] - YH[i].mean()
-        zt = _analytic_signal_fft(y)
-        zp = _analytic_signal_fft(yh)
-
-        At = np.abs(zt)
-        med_amp = np.median(At)
-        if not np.isfinite(med_amp) or med_amp == 0:
-            continue
-
-        mask = At > (amp_frac_thresh * med_amp)
-        if not np.any(mask):
-            continue
-
-        phi_t = np.unwrap(np.angle(zt))
-        phi_p = np.unwrap(np.angle(zp))
-        dphi = _wrap_to_pi(phi_p - phi_t)
-
-        sel = dphi[mask]
-        if sel.size == 0:
-            continue
-
-        out[i] = float(np.mean(np.abs(to_unit(sel))))
-    return out
+    return _F.phase_error_deg(pred[:, history_len:], true[:, history_len:], unit=unit,
+                              amp_frac_thresh=amp_frac_thresh)
 
 
 def compute_metric_vector(
