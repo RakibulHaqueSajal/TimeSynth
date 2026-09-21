@@ -1,0 +1,18 @@
+# P2.2: TSMixer (Chen et al., TMLR 2023). Not previously in the codebase. Training protocol
+# matches the other MLP-family models (lr 1e-4, wd 1e-4, 300 epochs, patience 30).
+model: TSMixer
+label: TSMixer
+args:
+  learning_rate: 0.0001
+  weight_decay: 0.0001
+  train_epochs: 300
+  patience: 30
+  e_layers: 4
+  d_ff: 64
+  dropout: 0.1
+  revin: 1
+  affine: 0
+  subtract_last: 0
+  backcast: 0
+  batch_size: 128
+  lradj: TST

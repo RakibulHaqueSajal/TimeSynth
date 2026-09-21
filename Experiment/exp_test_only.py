@@ -1,7 +1,7 @@
 import comet_ml
 from comet_ml import start
 from Data_Loader.data_loader import data_provider
-from Experiment.Exp_Basic import Exp_Basic
+from Experiment.Exp_Basic import Exp_Basic, simple_input
 from utils.tools import EarlyStopping, adjust_learning_rate, visual,visual_multivariate_error_distribution,visual_multichannel,visual_relative_error_distribution
 from utils.metrics import metric
 import torch
@@ -397,14 +397,14 @@ class Exp_Long_Term_Forecast_Test_Dist(Exp_Basic):
 
                     if self.args.use_amp:
                         with torch.cuda.amp.autocast():
-                            if any(k in self.args.model for k in ["Linear", "TST", "Beats", "MLP", "TCN"]):
+                            if simple_input(self.args.model):
                                 outputs = self.model(batch_x)
                             elif "FITS" in self.args.model:
                                 outputs, _low = self.model(batch_x)
                             else:
                                 outputs = self.model(batch_x, batch_x_mark, dec_inp, batch_y_mark)
                     else:
-                        if any(k in self.args.model for k in ["Linear", "TST", "Beats", "MLP", "TCN"]):
+                        if simple_input(self.args.model):
                             outputs = self.model(batch_x)
                         elif "FITS" in self.args.model:
                             outputs, _low = self.model(batch_x)
@@ -636,14 +636,14 @@ class Exp_Long_Term_Forecast_Test_Dist(Exp_Basic):
 
     #                 if self.args.use_amp:
     #                     with torch.cuda.amp.autocast():
-    #                         if any(k in self.args.model for k in ["Linear", "TST", "Beats", "MLP", "TCN"]):
+    #                         if simple_input(self.args.model):
     #                             outputs = self.model(batch_x)
     #                         elif "FITS" in self.args.model:
     #                             outputs, _low = self.model(batch_x)
     #                         else:
     #                             outputs = self.model(batch_x, batch_x_mark, dec_inp, batch_y_mark)
     #                 else:
-    #                     if any(k in self.args.model for k in ["Linear", "TST", "Beats", "MLP", "TCN"]):
+    #                     if simple_input(self.args.model):
     #                         outputs = self.model(batch_x)
     #                     elif "FITS" in self.args.model:
     #                         outputs, _low = self.model(batch_x)

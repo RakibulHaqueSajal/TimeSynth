@@ -1,0 +1,8 @@
+# P2.4: seasonal-naive floor. No parameters; train() writes a checkpoint and returns.
+model: SeasonalNaive
+label: SeasonalNaive
+args:
+  train_epochs: 1
+  patience: 1
+  batch_size: 128
+  lradj: TST

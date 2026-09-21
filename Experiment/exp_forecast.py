@@ -1,7 +1,7 @@
 import comet_ml
 from comet_ml import start, ExperimentConfig
 from Data_Loader.data_loader import data_provider
-from Experiment.Exp_Basic import Exp_Basic
+from Experiment.Exp_Basic import Exp_Basic, simple_input
 from utils.tools import EarlyStopping, adjust_learning_rate, visual,visual_multivariate_error_distribution,visual_multichannel,visual_relative_error_distribution,compute_model_weight_norm
 from utils.metrics import metric
 
@@ -105,7 +105,7 @@ class Exp_Long_Term_Forecast(Exp_Basic):
                 # ==============================
                 if self.args.use_amp:
                     with torch.cuda.amp.autocast():
-                        if any(k in self.args.model for k in ["Linear", "TST", "Beats", "MLP", "TCN"]):
+                        if simple_input(self.args.model):
                             outputs = self.model(batch_x)
                         elif "FITS" in self.args.model:
                             outputs, low = self.model(batch_x)
@@ -116,7 +116,7 @@ class Exp_Long_Term_Forecast(Exp_Basic):
                         else:
                             outputs = self.model(batch_x, batch_x_mark, dec_inp, batch_y_mark)
                 else:
-                    if any(k in self.args.model for k in ["Linear", "TST", "Beats", "MLP", "TCN"]):
+                    if simple_input(self.args.model):
                         outputs = self.model(batch_x)
                     elif self.args.model == "PathFormer":
                         outputs, balance_loss = self.model(batch_x)
@@ -159,6 +159,13 @@ class Exp_Long_Term_Forecast(Exp_Basic):
             os.makedirs(path)
 
         time_now = time.time()
+
+        # parameter-free models (seasonal naive): nothing to fit, just write a checkpoint
+        if not any(p.requires_grad for p in self.model.parameters()):
+            print('model has no trainable parameters; skipping training')
+            torch.save(self.model.state_dict(), os.path.join(path, 'checkpoint.pth'))
+            torch.save(self.model.state_dict(), os.path.join(path, 'model_last_epoch.pth'))
+            return self.model
 
         train_steps = len(train_loader)
         early_stopping = EarlyStopping(patience=self.args.patience, verbose=True)
@@ -236,7 +243,7 @@ class Exp_Long_Term_Forecast(Exp_Basic):
                     # encoder - decoder
                     if self.args.use_amp:
                         with torch.cuda.amp.autocast():
-                            if 'Linear' in self.args.model or 'TST' in self.args.model or 'Beats' in self.args.model or 'MLP' in self.args.model or 'TCN' in self.args.model:
+                            if simple_input(self.args.model):
                                 outputs = self.model(batch_x)
                             elif self.args.model=='PathFormer':
                                 outputs, balance_loss = self.model(batch_x)
@@ -245,7 +252,7 @@ class Exp_Long_Term_Forecast(Exp_Basic):
                             else :
                                 outputs = self.model(batch_x, batch_x_mark, dec_inp, batch_y_mark)
                     else:
-                        if 'Linear' in self.args.model or 'TST' in self.args.model or 'Beats' in self.args.model or 'MLP' in self.args.model or 'TCN' in self.args.model:
+                        if simple_input(self.args.model):
                             outputs = self.model(batch_x)
                         elif self.args.model=='PathFormer':
                             outputs, balance_loss = self.model(batch_x)
@@ -384,7 +391,7 @@ class Exp_Long_Term_Forecast(Exp_Basic):
 
                     if self.args.use_amp:
                         with torch.cuda.amp.autocast():
-                            if any(k in self.args.model for k in ['Linear', 'TST', 'Beats', 'MLP', 'TCN']):
+                            if simple_input(self.args.model):
                                 outputs = self.model(batch_x)
                             elif self.args.model == 'PathFormer':
                                 outputs, balance_loss = self.model(batch_x)
@@ -393,7 +400,7 @@ class Exp_Long_Term_Forecast(Exp_Basic):
                             else:
                                 outputs = self.model(batch_x, batch_x_mark, dec_inp, batch_y_mark)
                     else:
-                        if any(k in self.args.model for k in ['Linear', 'TST', 'Beats', 'MLP', 'TCN']):
+                        if simple_input(self.args.model):
                             outputs = self.model(batch_x)
                         elif self.args.model == 'PathFormer':
                             outputs, balance_loss = self.model(batch_x)
