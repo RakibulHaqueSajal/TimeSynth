@@ -1082,10 +1082,12 @@ if __name__ == "__main__":
         "long_term_forecast_DLinear_50_100_DLinear_Drift_Harmonic_Clean_70_10_20_0.001_0.0001_16_Shift_{k}",
     )
 
+    # FIX (revision): this entry previously pointed at the Single_Phase_Modulation FITS run,
+    # so the paper's Drift_Harmonic FITS shift curve was computed from SPM predictions.
     add_family_from_fmt(REGISTRY, "Drift_Harmonic", "FITS",
         "FITS-{k}",
         "/uufs/sci.utah.edu/projects/medvic-lab/Rakib/Time_Series/Time_Series_Forecast/Train_Test_Validation/"
-        "long_term_forecast_FITS_50_100_FITS_Single_Phase_Modulation_Clean_70_10_20_0.001_0.0001_16_Shift_{k}",
+        "long_term_forecast_FITS_50_100_FITS_Drift_Harmonic_Clean_70_10_20_0.001_0.0001_16_Shift_{k}",
     )
 
     # === Single_Phase_Modulation ===
