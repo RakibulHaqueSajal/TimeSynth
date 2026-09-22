@@ -105,7 +105,10 @@ def save_result(out_dir: str, pred: np.ndarray, true: np.ndarray, hist: np.ndarr
     np.save(os.path.join(out_dir, "true.npy"), _squeeze(np.asarray(true, np.float32)))
     np.save(os.path.join(out_dir, "hist.npy"), _squeeze(np.asarray(hist, np.float32)))
     if samples is not None:
-        np.save(os.path.join(out_dir, "samples.npy"), _squeeze(np.asarray(samples, np.float32)))
+        S = np.asarray(samples, np.float32)
+        if S.ndim == 4 and S.shape[-1] == 1:
+            S = S[..., 0]
+        np.save(os.path.join(out_dir, "samples.npy"), S)                     # [S, N, H]
     meta.to_parquet(os.path.join(out_dir, "meta.parquet"), index=False)
 
 

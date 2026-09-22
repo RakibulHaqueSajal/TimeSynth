@@ -60,3 +60,28 @@ def test_seasonal_naive_continues_sinusoid():
     z = m(torch.zeros(2, 50, 1) + 0.7)
     assert torch.allclose(z, torch.full((2, 100, 1), 0.7))
     assert not any(p.requires_grad for p in m.parameters())
+
+
+def test_csdi_shapes_and_loss_decreases():
+    from Model import CSDI
+    torch.manual_seed(0)
+    c = cfg(e_layers=1, d_model=16, n_heads=4, diff_steps=5, n_samples=2)
+    m = CSDI.Model(c)
+    x = torch.randn(4, 50, 1)
+    y = torch.randn(4, 100, 1)
+    l0 = m.training_loss(x, y)
+    assert l0.ndim == 0 and torch.isfinite(l0)
+    s = m.sample(x, n_samples=3)
+    assert s.shape == (3, 4, 100, 1)
+    assert m(x).shape == (4, 100, 1)
+    opt = torch.optim.Adam(m.parameters(), lr=1e-3)
+    t = torch.arange(150, dtype=torch.float32) / 10.0
+    sig = torch.sin(2 * np.pi * t)[None, :, None].repeat(8, 1, 1)
+    losses = []
+    for _ in range(60):
+        opt.zero_grad()
+        loss = m.training_loss(sig[:, :50], sig[:, 50:])
+        loss.backward()
+        opt.step()
+        losses.append(loss.item())
+    assert np.mean(losses[-10:]) < np.mean(losses[:10])

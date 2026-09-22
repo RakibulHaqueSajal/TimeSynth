@@ -240,6 +240,7 @@ def data_provider(args, flag):
         random_seed=random_seed,
         # P0.2: window strides. Defaults reproduce the paper (stride 1 everywhere).
         stride=(getattr(args, "train_stride", 1) if flag == "train" else getattr(args, "eval_stride", 1)),
+        max_windows_per_file=(None if flag == "train" else getattr(args, "max_windows_per_file", None)),
     )
 
     if flag == "train":
@@ -248,7 +249,8 @@ def data_provider(args, flag):
         batch_size = args.batch_size
     elif flag == "val":
         shuffle_flag = False
-        drop_last = True
+        # keep partial batches: with capped / strided val sets a small set could otherwise yield no batch
+        drop_last = bool(getattr(args, "test_drop_last", True))
         batch_size = args.batch_size
     elif flag in ["test", "pred"]:
         shuffle_flag = False

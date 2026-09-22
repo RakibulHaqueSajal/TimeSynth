@@ -21,7 +21,8 @@ class Dataset_Custom(Dataset):
                  random_seed=42,
                  patch_len=None,               # NEW: add patch_len for warning/padding
                  pad_short_y=False,            # NEW: option to pad y if it's too short
-                 stride=1):                    # P0.2: window stride (1 = legacy behavior)
+                 stride=1,                     # P0.2: window stride (1 = legacy behavior)
+                 max_windows_per_file=None):   # P1.3: cap (evenly spaced) so long recordings do not dominate
         """
         Parameters:
         - size: [seq_len, label_len, pred_len]
@@ -39,6 +40,7 @@ class Dataset_Custom(Dataset):
         self.patch_len = patch_len
         self.pad_short_y = pad_short_y
         self.stride = max(1, int(stride))
+        self.max_windows_per_file = int(max_windows_per_file) if max_windows_per_file else None
         self.meta = []   # one (file_id, file_name, window_start) per sample, same order as self.samples
 
         assert flag in ['train', 'val', 'test']
@@ -98,7 +100,11 @@ class Dataset_Custom(Dataset):
             max_start = len(values) - self.seq_len
             if self.flag=='test' or self.flag=='val' or self.flag=='train':
                 self.label_len=0
-            for i in range(0, max_start - self.label_len - self.pred_len + 1, self.stride):
+            starts = list(range(0, max_start - self.label_len - self.pred_len + 1, self.stride))
+            if self.max_windows_per_file and len(starts) > self.max_windows_per_file:
+                sel = np.linspace(0, len(starts) - 1, self.max_windows_per_file).round().astype(int)
+                starts = [starts[k] for k in sel]
+            for i in starts:
                 s_beg = i
                 s_end = s_beg + self.seq_len
                 r_beg = s_end - self.label_len

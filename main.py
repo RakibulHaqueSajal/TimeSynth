@@ -69,6 +69,8 @@ if __name__ == '__main__':
     parser.add_argument('--test_drop_last', type=str2bool, default=True,
                         help='drop the last partial test batch (paper behavior). Revision runs use False')
     parser.add_argument('--fs', type=float, default=10.0, help='sampling rate in Hz (recorded in meta)')
+    parser.add_argument('--max_windows_per_file', type=int, default=None,
+                        help='cap on val/test windows per file (evenly spaced), so long recordings do not dominate')
     parser.add_argument('--save_legacy_arrays', type=str2bool, default=True,
                         help='also write test_{pred,true}_with_history.npy for the Statistical_Test scripts')
     parser.add_argument('--scale', type=bool, default=False, help='whether to scale the dataset')
@@ -188,6 +190,12 @@ if __name__ == '__main__':
     parser.add_argument('--metric', type=str, default='mae')
     parser.add_argument('--batch_norm', type=int, default=0)
     
+    #CSDI (P2.3)
+    parser.add_argument('--diff_steps', type=int, default=50, help='CSDI diffusion steps')
+    parser.add_argument('--n_samples', type=int, default=50, help='CSDI samples per window at test time')
+    parser.add_argument('--beta_start', type=float, default=1e-4)
+    parser.add_argument('--beta_end', type=float, default=0.5)
+
     #Autformer
     parser.add_argument('--moving_avg', type=int, default=25, help='window size of moving average')
 

@@ -75,6 +75,11 @@ class Exp_Long_Term_Forecast(Exp_Basic):
                 batch_x_mark = batch_x_mark.float().to(self.device)
                 batch_y_mark = batch_y_mark.float().to(self.device)
 
+                # probabilistic models (CSDI): validate on the diffusion loss
+                if hasattr(self.model, "training_loss"):
+                    total_loss.append(self.model.training_loss(batch_x, batch_y.to(self.device)).item())
+                    continue
+
                 # ==============================
                 # Decoder input construction
                 # ==============================
@@ -196,6 +201,19 @@ class Exp_Long_Term_Forecast(Exp_Basic):
                 self.input_size=batch_x.shape
                 batch_x_mark = batch_x_mark.float().to(self.device)
                 batch_y_mark = batch_y_mark.float().to(self.device)
+
+                # probabilistic models (CSDI): the model owns its loss
+                if hasattr(self.model, "training_loss"):
+                    loss = self.model.training_loss(batch_x, batch_y)
+                    train_loss.append(loss.item())
+                    loss.backward()
+                    model_optim.step()
+                    if self.args.lradj == 'TST':
+                        adjust_learning_rate(model_optim, scheduler, epoch + 1, self.args)
+                        scheduler.step()
+                    if (i + 1) % 100 == 0:
+                        print("\titers: {0}, epoch: {1} | loss: {2:.7f}".format(i + 1, epoch + 1, loss.item()))
+                    continue
                 
                 if "former" in self.args.model.lower():
                     # split history into two halves
@@ -345,7 +363,7 @@ class Exp_Long_Term_Forecast(Exp_Basic):
             print('loading model from', ckpt_dir)
             self.model.load_state_dict(torch.load(os.path.join(ckpt_dir, 'checkpoint.pth')))
 
-        preds, trues, hists = [], [], []
+        preds, trues, hists, samples_all = [], [], [], []
         print(setting)
         folder_path = getattr(self.args, 'run_dir', None) or os.path.join(self.args.results_dir, setting)
         if not os.path.exists(folder_path):
@@ -360,9 +378,16 @@ class Exp_Long_Term_Forecast(Exp_Basic):
                 batch_y_mark = batch_y_mark.float().to(self.device)
 
                 # --------------------------
+                # Probabilistic models: draw S samples, point forecast = median
+                # --------------------------
+                if hasattr(self.model, "sample"):
+                    S = self.model.sample(batch_x, getattr(self.args, "n_samples", 50))   # [S, B, H, C]
+                    samples_all.append(S.detach().cpu().numpy())
+                    outputs = S.median(dim=0).values
+                # --------------------------
                 # Build decoder input
                 # --------------------------
-                if "former" in self.args.model.lower():
+                elif "former" in self.args.model.lower():
                     # Split history into halves: first half -> encoder, second half -> warm-up
                     hist_len = batch_x.shape[1]
                     half = hist_len // 2
@@ -514,8 +539,9 @@ class Exp_Long_Term_Forecast(Exp_Basic):
 
         # P0.2 layout: pred.npy, true.npy, hist.npy, meta.parquet (+ legacy arrays)
         meta = build_meta(self.args, preds.shape[0], dataset=test_data)
+        samples = np.concatenate(samples_all, axis=1) if samples_all else None      # [S, N, H, C]
         write_run_outputs(self.args, folder_path, hists, trues, preds, meta,
-                          metrics=[mae, mse, rmse, mape, mspe],
+                          metrics=[mae, mse, rmse, mape, mspe], samples=samples,
                           save_legacy=getattr(self.args, 'save_legacy_arrays', True))
         print('saved results to', folder_path)
         return

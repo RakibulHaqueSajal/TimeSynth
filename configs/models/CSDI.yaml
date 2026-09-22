@@ -1,0 +1,20 @@
+# P2.3: CSDI (Tashiro et al., NeurIPS 2021), forecasting as conditional imputation.
+# Reference defaults: 4 residual layers, 64 channels, 8 heads, 50 diffusion steps, quadratic
+# beta 1e-4..0.5, lr 1e-3 (reference) reduced to 5e-4 for stability with OneCycle; 100 epochs
+# and patience 15 because each epoch is ~10x a Linear epoch. 50 samples per test window.
+model: CSDI
+label: CSDI
+args:
+  learning_rate: 0.0005
+  weight_decay: 0.000001
+  train_epochs: 100
+  patience: 15
+  e_layers: 4
+  d_model: 64
+  n_heads: 8
+  diff_steps: 50
+  n_samples: 50
+  beta_start: 0.0001
+  beta_end: 0.5
+  batch_size: 64
+  lradj: TST

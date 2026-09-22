@@ -1,6 +1,6 @@
 import os
 import torch
-from Model import AFP_MLinear, Linear,MLinear,PatchTST,MLP_Backcast,AFP_Linear,DLinear,FITS,NBeats,FreTS,MICN,TimesNet,ModernTCN,PathFormer,Autoformer,Transformer,TSMixer,SeasonalNaive
+from Model import AFP_MLinear, Linear,MLinear,PatchTST,MLP_Backcast,AFP_Linear,DLinear,FITS,NBeats,FreTS,MICN,TimesNet,ModernTCN,PathFormer,Autoformer,Transformer,TSMixer,SeasonalNaive,CSDI
 
 # models whose forward signature is model(x) with x: [B, L, C]
 SIMPLE_INPUT_KEYS = ["Linear", "TST", "Beats", "MLP", "TCN", "Mixer", "Naive"]
@@ -31,7 +31,8 @@ class Exp_Basic(object):
             'Autoformer':Autoformer,
             'Transformer':Transformer,
             'TSMixer':TSMixer,            # P2.2
-            'SeasonalNaive':SeasonalNaive # P2.4
+            'SeasonalNaive':SeasonalNaive, # P2.4
+            'CSDI':CSDI                    # P2.3 (probabilistic)
         }
         
         self.device = self._acquire_device()

@@ -25,10 +25,20 @@ CONFIG_DIR = os.path.join(REPO_ROOT, "configs")
 # Root of the shared synthetic corpus. Overridable with the TIMESYNTH_DATA_ROOT
 # environment variable so the same configs work on the workstation and on the cluster.
 DEFAULT_DATA_ROOT = "/uufs/sci.utah.edu/projects/medvic-lab/Rakib/Time_Series/TimeSynth_data/Generation_Synthesized_Bio_Signals"
+DEFAULT_REAL_ROOT = "/uufs/sci.utah.edu/projects/medvic-lab/Rakib/Time_Series/TimeSynth_real"
 
 
 def data_root() -> str:
     return os.environ.get("TIMESYNTH_DATA_ROOT", DEFAULT_DATA_ROOT)
+
+
+def _expand(path: str) -> str:
+    """expandvars with defaults for the two roots used by the paradigm configs."""
+    env = dict(os.environ)
+    env.setdefault("TIMESYNTH_DATA_ROOT", DEFAULT_DATA_ROOT)
+    env.setdefault("TIMESYNTH_REAL", DEFAULT_REAL_ROOT)
+    import string
+    return string.Template(path).safe_substitute(env)
 
 
 def load_yaml(path: str) -> Dict[str, Any]:
@@ -99,7 +109,9 @@ def resolve_run(args: argparse.Namespace, argv: Optional[List[str]] = None) -> N
             args.signal = next(iter(signals))
         if args.signal not in signals:
             raise KeyError(f"signal '{args.signal}' not in paradigm {args.paradigm}: {list(signals)}")
-        base = os.path.join(data_root(), cfg.get("data_root_rel", ""))
+        root = cfg.get("data_root")            # absolute root (may use $ENV vars), else the synthetic corpus
+        root = _expand(root) if root else data_root()
+        base = os.path.join(root, cfg.get("data_root_rel", ""))
         if getattr(args, "condition", None):
             conds = cfg.get("conditions") or {}
             spec = conds.get(args.condition)

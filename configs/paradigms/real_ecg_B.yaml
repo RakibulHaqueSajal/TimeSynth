@@ -1,0 +1,22 @@
+# Real data, ecg, Track B (P1.2). Signals are datasets; root = $TIMESYNTH_REAL/processed/<dataset>_B.
+# Test windows: stride seq_len+pred_len (non-overlapping) and at most 200 per chunk file (P1.3).
+name: real_ecg_B
+fs: 50.0
+data_root: ${TIMESYNTH_REAL}/processed
+data_root_rel: ""
+signals:
+  NSRDB: nsrdb_B
+  AFDB: afdb_B
+args:
+  data: custom
+  task_name: long_term_forecast
+  features: S
+  target: Value
+  enc_in: 1
+  seq_len: 250
+  label_len: 0
+  pred_len: 500
+  train_stride: 50
+  eval_stride: 750
+  test_drop_last: false
+  max_windows_per_file: 200
