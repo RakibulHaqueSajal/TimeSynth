@@ -22,7 +22,8 @@ class Dataset_Custom(Dataset):
                  patch_len=None,               # NEW: add patch_len for warning/padding
                  pad_short_y=False,            # NEW: option to pad y if it's too short
                  stride=1,                     # P0.2: window stride (1 = legacy behavior)
-                 max_windows_per_file=None):   # P1.3: cap (evenly spaced) so long recordings do not dominate
+                 max_windows_per_file=None,    # P1.3: cap (evenly spaced) so long recordings do not dominate
+                 aug_rescale=None):            # P7: (lo, hi) random time-rescaling factor for training windows
         """
         Parameters:
         - size: [seq_len, label_len, pred_len]
@@ -41,6 +42,8 @@ class Dataset_Custom(Dataset):
         self.pad_short_y = pad_short_y
         self.stride = max(1, int(stride))
         self.max_windows_per_file = int(max_windows_per_file) if max_windows_per_file else None
+        self.aug_rescale = tuple(aug_rescale) if aug_rescale else None
+        self._files = []      # per-file value arrays, for on-the-fly augmentation
         self.meta = []   # one (file_id, file_name, window_start) per sample, same order as self.samples
 
         assert flag in ['train', 'val', 'test']
@@ -97,6 +100,7 @@ class Dataset_Custom(Dataset):
     
             timestamps = timestamps.to_numpy().reshape(-1, 1)
 
+            self._files.append(values)
             max_start = len(values) - self.seq_len
             if self.flag=='test' or self.flag=='val' or self.flag=='train':
                 self.label_len=0
@@ -138,7 +142,30 @@ class Dataset_Custom(Dataset):
         return len(self.samples)
 
     def __getitem__(self, index):
-        return self.samples[index]
+        if self.aug_rescale is None:
+            return self.samples[index]
+        return self._augmented(index)
+
+    def _augmented(self, index):
+        """
+        P7 augmentation: stretch the carrier frequency by a random factor r in
+        aug_rescale by reading a span of (seq_len + pred_len) * r source samples from
+        the file and resampling it to seq_len + pred_len points (linear interpolation).
+        r > 1 speeds the signal up (more cycles per window), r < 1 slows it down. If the
+        span does not fit in the file the original window is returned.
+        """
+        x, y, x_stamp, y_stamp = self.samples[index]
+        file_id, _, s_beg = self.meta[index]
+        L, H = self.seq_len, self.pred_len
+        r = float(np.random.uniform(*self.aug_rescale))
+        src = self._files[file_id]
+        span = int(np.ceil((L + H) * r)) + 1
+        if s_beg + span > len(src):
+            return x, y, x_stamp, y_stamp
+        seg = src[s_beg:s_beg + span, 0]
+        t_new = np.arange(L + H) * r
+        w = np.interp(t_new, np.arange(span), seg).astype(np.float32)[:, None]
+        return w[:L], w[L:], x_stamp, y_stamp
 
     def inverse_transform(self, data):
         if not self.scaler:

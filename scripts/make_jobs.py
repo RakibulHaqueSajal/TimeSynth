@@ -51,10 +51,10 @@ from utils.config import load_yaml, model_config_path, paradigm_config_path  # n
 GEN_DIR = os.path.join(REPO, "slurm", "generated")
 
 
-def setting_name(model_cfg: Dict, paradigm: str, signal: str, seq_len: int, pred_len: int) -> str:
+def setting_name(model_cfg: Dict, paradigm: str, signal: str, seq_len: int, pred_len: int, label_suffix: str = "") -> str:
     """Mirror main.py: setting = task_model-id_wd_lr_patch_len, model_id = label_seq_pred_paradigm_signal."""
     a = model_cfg.get("args", {})
-    label = model_cfg.get("label", model_cfg["model"])
+    label = model_cfg.get("label", model_cfg["model"]) + label_suffix
     wd = a.get("weight_decay", 0.0)
     lr = a.get("learning_rate", 0.0001)
     pl = a.get("patch_len", 16)
@@ -73,23 +73,25 @@ def expand(matrix: Dict) -> List[Dict]:
         signals = blk.get("signals") or list(pcfg.get("signals", {}).keys())
         conditions = blk.get("conditions") or [None]
         is_training = int(blk.get("is_training", 1))
+        suffix = blk.get("label_suffix", "")                 # results label = YAML label + suffix
+        ck_suffix = blk.get("checkpoint_label_suffix", suffix if is_training == 1 else "")
         for model in blk["models"]:
             mcfg = load_yaml(model_config_path(model))
-            label = mcfg.get("label", mcfg["model"])
+            label = mcfg.get("label", mcfg["model"]) + suffix
             for signal in signals:
                 for seed in blk["seeds"]:
                     for cond in conditions:
                         pname = paradigm if cond is None else f"{paradigm}__{cond}"
                         out = os.path.join(results_dir, pname, signal, label, f"seed{seed}", "pred.npy")
                         ckpt = None
-                        if is_training == 2:
+                        if is_training in (2, 3):
                             src = blk.get("checkpoint_from", {"paradigm": paradigm})
                             ckpt = blk.get("checkpoint_name") or (
-                                setting_name(mcfg, src["paradigm"], signal, seq_len, pred_len) + f"_seed{seed}")
+                                setting_name(mcfg, src["paradigm"], signal, seq_len, pred_len, ck_suffix) + f"_seed{seed}")
                         jobs.append(dict(model=model, paradigm=paradigm, signal=signal, seed=seed,
                                          condition=cond, is_training=is_training, out=out,
                                          checkpoint_name=ckpt, done=os.path.exists(out),
-                                         extra=blk.get("extra_args", "")))
+                                         extra=blk.get("extra_args", ""), label=label if suffix else None))
     return jobs
 
 
@@ -104,6 +106,8 @@ def job_command(matrix: Dict, j: Dict) -> str:
         parts += ["--condition", j["condition"]]
     if j["checkpoint_name"]:
         parts += ["--checkpoint_name", j["checkpoint_name"]]
+    if j.get("label"):
+        parts += ["--model_label", j["label"]]
     cmd = " ".join(shlex.quote(p) for p in parts)
     for extra in (matrix.get("extra_args", ""), j.get("extra", "")):
         if extra:

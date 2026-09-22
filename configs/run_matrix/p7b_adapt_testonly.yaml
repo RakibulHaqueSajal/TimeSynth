@@ -1,0 +1,61 @@
+results_dir: /uufs/sci.utah.edu/projects/medvic-lab/Rakib/Time_Series/TimeSynth_runs/revision/results
+checkpoint_dir: /uufs/sci.utah.edu/projects/medvic-lab/Rakib/Time_Series/TimeSynth_runs/revision/checkpoints
+env:
+  conda_python: /uufs/sci.utah.edu/projects/medvic-lab/Rakib/miniconda3/envs/timeenv/bin/python
+extra_args: --num_workers 4
+phase: p7b_adapt_testonly
+slurm:
+  partition: general-gpu
+  account: medvic
+  time: 0-02:00:00
+  mem: 16G
+  cpus: 6
+  gres: gpu:1
+  max_concurrent: 5
+blocks:
+- paradigm: shift
+  signals: &id001
+  - Single_Phase_Modulation
+  - Dual_Phase_Modulation
+  conditions: &id002
+  - bucket_m2
+  - bucket_m1
+  - bucket_p1
+  - bucket_p2
+  models: &id003
+  - Linear
+  - DLinear
+  - Transformer
+  - ModernTCN
+  - PatchTST
+  seeds: &id004
+  - 2021
+  - 2022
+  - 2023
+  is_training: 2
+  label_suffix: _aug
+  checkpoint_from:
+    paradigm: clean
+  checkpoint_label_suffix: _aug
+- paradigm: shift
+  signals: *id001
+  conditions: *id002
+  models: *id003
+  seeds: *id004
+  is_training: 3
+  label_suffix: _fs5
+  checkpoint_from:
+    paradigm: clean
+  checkpoint_label_suffix: ''
+  extra_args: --fewshot_k 5 --fewshot_steps 200
+- paradigm: shift
+  signals: *id001
+  conditions: *id002
+  models: *id003
+  seeds: *id004
+  is_training: 3
+  label_suffix: _fs20
+  checkpoint_from:
+    paradigm: clean
+  checkpoint_label_suffix: ''
+  extra_args: --fewshot_k 20 --fewshot_steps 200

@@ -95,7 +95,8 @@ def resolve_run(args: argparse.Namespace, argv: Optional[List[str]] = None) -> N
         apply_yaml_args(args, cfg, explicit, args.model_config)
         if "model" in cfg and "model" not in explicit:
             args.model = cfg["model"]
-        args.model_label = cfg.get("label", getattr(args, "model_label", None) or args.model)
+        if "model_label" not in explicit or not getattr(args, "model_label", None):
+            args.model_label = cfg.get("label", args.model)
 
     if getattr(args, "paradigm_config", None):
         cfg = load_yaml(paradigm_config_path(args.paradigm_config))

@@ -341,6 +341,63 @@ class Exp_Long_Term_Forecast(Exp_Basic):
         return self.model
     
 
+    def _forward_simple(self, batch_x, batch_y, batch_x_mark, batch_y_mark):
+        """One forward pass with the same dispatch as train()/test() (non-probabilistic models)."""
+        if "former" in self.args.model.lower():
+            half = batch_x.shape[1] // 2
+            dec_pad = torch.zeros([batch_y.shape[0], self.args.pred_len, batch_y.shape[-1]], device=self.device)
+            dec_inp = torch.cat([batch_x[:, half:, :], dec_pad], dim=1)
+            return self.model(batch_x[:, :half, :], batch_x_mark[:, :half, :], dec_inp, batch_x_mark[:, half:, :])
+        if simple_input(self.args.model):
+            return self.model(batch_x)
+        if 'FITS' in self.args.model:
+            return self.model(batch_x)[0]
+        dec_inp = torch.zeros_like(batch_y[:, -self.args.pred_len:, :])
+        return self.model(batch_x, batch_x_mark, dec_inp, batch_y_mark)
+
+    def fewshot_and_test(self, setting):
+        """
+        P7 few-shot adaptation. Loads the clean checkpoint, fine-tunes on k windows drawn
+        from the first `fewshot_source_files` test files of the target condition, then
+        evaluates on the remaining files (meta.parquet keeps every window; rows from the
+        source files are flagged with `fewshot_source = True` and must be excluded in analysis).
+        """
+        ckpt_dir = os.path.join(self.args.checkpoint_dir, self.args.ckpt_name)
+        self.model.load_state_dict(torch.load(os.path.join(ckpt_dir, 'checkpoint.pth')))
+        test_data, _ = self._get_data(flag='test')
+        n_src = int(self.args.fewshot_source_files)
+        src_idx = [i for i, m in enumerate(test_data.meta) if m[0] < n_src]
+        rng = np.random.default_rng(self.args.seed)
+        k = int(self.args.fewshot_k)
+        if k > 0 and src_idx:
+            chosen = rng.choice(src_idx, size=min(k, len(src_idx)), replace=False)
+            xs = torch.tensor(np.stack([test_data.samples[i][0] for i in chosen])).float().to(self.device)
+            ys = torch.tensor(np.stack([test_data.samples[i][1] for i in chosen])).float().to(self.device)
+            xm = torch.tensor(np.stack([test_data.samples[i][2] for i in chosen])).float().to(self.device)
+            ym = torch.tensor(np.stack([test_data.samples[i][3] for i in chosen])).float().to(self.device)
+            if any(p.requires_grad for p in self.model.parameters()):
+                opt = optim.AdamW(self.model.parameters(), lr=self.args.fewshot_lr, weight_decay=self.args.weight_decay)
+                crit = nn.MSELoss()
+                self.model.train()
+                for step in range(int(self.args.fewshot_steps)):
+                    opt.zero_grad()
+                    if hasattr(self.model, 'training_loss'):
+                        loss = self.model.training_loss(xs, ys)
+                    else:
+                        out = self._forward_simple(xs, ys, xm, ym)[:, -self.args.pred_len:, :]
+                        loss = crit(out, ys[:, -self.args.pred_len:, :])
+                    loss.backward()
+                    opt.step()
+                print(f'few-shot: fine-tuned on {len(chosen)} windows for {self.args.fewshot_steps} steps, final loss {loss.item():.5f}')
+        # evaluate with the standard test() (it re-reads the test set); then flag source files in meta
+        self.test(setting, test=0)
+        mp = os.path.join(self.args.run_dir, 'meta.parquet')
+        import pandas as pd
+        meta = pd.read_parquet(mp)
+        meta['fewshot_source'] = meta.file_id < n_src
+        meta['fewshot_k'] = k
+        meta.to_parquet(mp, index=False)
+
     def plot_model_structure(self,expand_nested=True, save_path=None,device='cuda'):
   
         # Generate model visualization

@@ -1,0 +1,32 @@
+results_dir: /uufs/sci.utah.edu/projects/medvic-lab/Rakib/Time_Series/TimeSynth_runs/revision/results
+checkpoint_dir: /uufs/sci.utah.edu/projects/medvic-lab/Rakib/Time_Series/TimeSynth_runs/revision/checkpoints
+env:
+  conda_python: /uufs/sci.utah.edu/projects/medvic-lab/Rakib/miniconda3/envs/timeenv/bin/python
+extra_args: --num_workers 4
+phase: p7a_adapt_aug_train
+slurm:
+  partition: general-gpu
+  account: medvic
+  time: 0-12:00:00
+  mem: 32G
+  cpus: 6
+  gres: gpu:1
+  max_concurrent: 5
+blocks:
+- paradigm: clean
+  signals:
+  - Single_Phase_Modulation
+  - Dual_Phase_Modulation
+  models:
+  - Linear
+  - DLinear
+  - Transformer
+  - ModernTCN
+  - PatchTST
+  seeds:
+  - 2021
+  - 2022
+  - 2023
+  is_training: 1
+  label_suffix: _aug
+  extra_args: --aug_rescale 0.5 2.0

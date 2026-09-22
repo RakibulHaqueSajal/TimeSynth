@@ -241,6 +241,7 @@ def data_provider(args, flag):
         # P0.2: window strides. Defaults reproduce the paper (stride 1 everywhere).
         stride=(getattr(args, "train_stride", 1) if flag == "train" else getattr(args, "eval_stride", 1)),
         max_windows_per_file=(None if flag == "train" else getattr(args, "max_windows_per_file", None)),
+        aug_rescale=(getattr(args, "aug_rescale", None) if flag == "train" else None),
     )
 
     if flag == "train":

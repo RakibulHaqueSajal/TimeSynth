@@ -190,6 +190,16 @@ if __name__ == '__main__':
     parser.add_argument('--metric', type=str, default='mae')
     parser.add_argument('--batch_norm', type=int, default=0)
     
+    #Adaptation arm (P7)
+    parser.add_argument('--aug_rescale', type=float, nargs=2, default=None,
+                        help='train-time random time-rescaling factor range, e.g. 0.5 2.0 (carrier frequency stretch)')
+    parser.add_argument('--fewshot_k', type=int, default=0,
+                        help='is_training 3: number of target-condition windows used for fine-tuning')
+    parser.add_argument('--fewshot_steps', type=int, default=200, help='fine-tuning gradient steps')
+    parser.add_argument('--fewshot_lr', type=float, default=1e-4)
+    parser.add_argument('--fewshot_source_files', type=int, default=4,
+                        help='first N test files of the target condition supply the few-shot windows and are excluded from evaluation')
+
     #CSDI (P2.3)
     parser.add_argument('--diff_steps', type=int, default=50, help='CSDI diffusion steps')
     parser.add_argument('--n_samples', type=int, default=50, help='CSDI samples per window at test time')
@@ -300,6 +310,20 @@ if __name__ == '__main__':
             
             torch.cuda.empty_cache()
           # exp.plot_model_structure()
+
+    elif args.is_training==3 and args.stat_model==False:
+        # few-shot adaptation (P7): fine-tune a clean checkpoint on k windows of the target condition
+        for seed in args.seeds:
+            args.seed = seed
+            _seed_everything(seed)
+            args.run_dir = result_dir_for(args, seed)
+            args.ckpt_name = args.checkpoint_name or f'{setting}_seed{seed}'
+            if os.path.exists(os.path.join(args.run_dir, 'pred.npy')):
+                print(f'[skip] {args.run_dir} already has pred.npy')
+                continue
+            exp = Exp_Long_Term_Forecast(args)
+            exp.fewshot_and_test(setting)
+            torch.cuda.empty_cache()
 
     elif args.is_training==2 and args.stat_model==False:
         # test-only: evaluate a trained checkpoint on another condition (noise, shift, markov p)
