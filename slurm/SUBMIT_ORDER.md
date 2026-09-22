@@ -14,21 +14,24 @@ or on the cluster with `sbatch slurm/generated/<phase>.sbatch`. Check with
 
 ## Order and dependencies
 
+Priority order (Rakib, 2026-09-22): real-data validation first, then the synthetic roster.
+Partition: `general-gpu` only for now; the `medvic` partition is not to be used until Rakib says so.
+Concurrency: at most five jobs running in total, so exactly one array is submitted at a time.
+
 | step | matrix | jobs | needs | what it is |
 |---|---|---|---|---|
-| 1 | `p1a_real_pilot` | 4 | BIDMC processed (done) | P1.4 pilot: Linear, PatchTST, Transformer, CSDI on BIDMC Track A; fills the compute table |
-| 2 | `p2a_synthetic_train` | 240 | synthetic corpora (done) | clean x3 signals, state transition, redesigned Markov; 16 models x 3 seeds |
-| 3 | `p2b_synthetic_testonly_part0/1` | 1584 | step 2 finished (`--after`) | noise SNR 1-6 and shift buckets on the clean checkpoints; Markov per dwell time |
-| 4 | `p1b_real_trackA` | 240 | all real datasets processed | PPG (BIDMC, DaLiA), ECG (NSRDB, AFDB), EEG (Sleep-EDF); 16 models x 3 seeds |
-| 5 | `p1c_real_trackB` | 180 | same | PPG and ECG morphology at 50 Hz; 15 point models x 3 seeds |
-| 6 | `p3a_tier2_train` | 135 | Tier 2 corpora (done) | Tier 2 ECG, PPG (50 Hz), EEG (100 Hz); 15 models x 3 seeds |
+| 1 | `p1a_real_pilot` | 4 | BIDMC processed | P1.4 pilot: Linear, PatchTST, Transformer, CSDI on BIDMC Track A (submitted, job 201928) |
+| 2 | `p1b_real_trackA` | 240 | all real datasets processed | PPG (BIDMC, DaLiA), ECG (NSRDB, AFDB), EEG (Sleep-EDF); 16 models x 3 seeds |
+| 3 | `p1c_real_trackB` | 180 | same | PPG and ECG morphology at 50 Hz; 15 point models x 3 seeds |
+| 4 | `p2a_synthetic_train` | 240 | synthetic corpora | clean x3 signals, state transition, redesigned Markov; 16 models x 3 seeds. Also required before the ranking-transfer analysis of Phase 1 can be completed |
+| 5 | `p2b_synthetic_testonly_part0/1` | 1584 | step 4 (`--after`) | noise SNR 1-6 and shift buckets on the clean checkpoints; Markov per dwell time |
+| 6 | `p3a_tier2_train` | 135 | Tier 2 corpora | Tier 2 ECG, PPG (50 Hz), EEG (100 Hz); 15 models x 3 seeds |
 | 7 | `p3b_tier2_testonly` | 810 | step 6 | Tier 2 noise SNR 1-6 on the Tier 2 checkpoints |
 | 8 | `p7a_adapt_aug_train` | 30 | - | augmentation retraining, SPM and DPM, 5 representative models |
-| 9 | `p7b_adapt_testonly` | 360 | steps 2 and 8 | augmented checkpoints on shift; few-shot k = 5, 20 from clean checkpoints |
+| 9 | `p7b_adapt_testonly` | 360 | steps 4 and 8 | augmented checkpoints on shift; few-shot k = 5, 20 from clean checkpoints |
 
-Steps 2, 4, 5, 6, 8 are independent and can be queued together; SLURM still runs at most
-five elements per array, so queuing several arrays at once runs up to 5 x (number of arrays)
-jobs concurrently. If that is not wanted, submit one array at a time.
+Queuing several arrays at once would run 5 x (number of arrays) jobs concurrently, which the
+current policy does not allow: submit the next array only when the previous one has drained.
 
 ## Compute estimate (workstation RTX-class GPU, 10 Hz clean paradigm; the pilot refines this)
 
