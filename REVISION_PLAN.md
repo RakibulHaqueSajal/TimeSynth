@@ -464,18 +464,19 @@ Fill these in before the dependent task starts.
 
 | ID | Question | Recommendation | Rakib's decision | Date |
 |----|----------|----------------|------------------|------|
-| D0 | Revision deadline | | | |
-| D1 | Real datasets | BIDMC PPG, MIT-BIH NSR; DaLiA and AFDB secondary; Sleep-EDF if time | | |
-| D2 | Clinical proxy | Heart-rate error from forecasts | | |
-| D3 | Probabilistic baseline | CSDI | | |
-| D4 | Group for DLinear, FITS, FreMLP | Decomposition | (pending; `configs/bias_groups.yaml` uses the recommendation until changed) | |
-| D5 | Tier 2 sampling and windows | 50 Hz, 250 in, 500 out | | |
-| D6 | Tier 2 ECG generator | McSharry dynamical model | | |
-| D7 | PPG in Tier 2 | In, two-Gaussian pulse | | |
-| D8 | Markov dwell times | 2, 5, 10 s | | |
+| D0 | Revision deadline | | 2026-10-05 | 2026-09-21 |
+| D1 | Real datasets | BIDMC PPG, MIT-BIH NSR; DaLiA and AFDB secondary; Sleep-EDF if time | All three modalities: PPG (BIDMC primary, DaLiA secondary), ECG (MIT-BIH NSR primary, AFDB secondary), EEG (Sleep-EDF Fpz-Cz primary) | 2026-09-21 |
+| D2 | Clinical proxy | Heart-rate error from forecasts | As recommended | 2026-09-21 |
+| D3 | Probabilistic baseline | CSDI | CSDI | 2026-09-21 |
+| D4 | Group for DLinear, FITS, FreMLP | Decomposition | Decomposition | 2026-09-21 |
+| D5 | Tier 2 sampling and windows | 50 Hz, 250 in, 500 out | As recommended | 2026-09-21 |
+| D6 | Tier 2 ECG generator | McSharry dynamical model | McSharry | 2026-09-21 |
+| D7 | PPG in Tier 2 | In, two-Gaussian pulse | In | 2026-09-21 |
+| D8 | Markov dwell times | 2, 5, 10 s | 2, 5, 10 s | 2026-09-21 |
 | D9 | Q4 in main text or Supplement | Decide after P4 results | | |
 | D10 | Adaptation arm | Decide after P0.4 and P1 | | |
 | C1 | Was the paper's Markov training per-p? | Check Redtail launch scripts | Yes: data live in `p_<p>/{train,val,test}` and every checkpoint is `..._TwoState_p_<p>_...` (one per p). Resolved from disk, no decision needed | 2026-09-21 |
 | C2 | Which `transition_probs` list produced the paper numbers? | Check Redtail outputs | Base run `(0, 0.1, 0.5, 0.9, 1)` into `PhaseMod_Single_Freq_TwoState` plus `_Extended` run `(0.3, 0.7)`; the paper's `{0.1, 0.3, 0.5, 0.7, 0.9}` is the union minus the degenerate 0 and 1. `analysis/constants.json` | 2026-09-21 |
 | C3 | TSMixer commit hash for the response letter | | `6f356a6` (Model/TSMixer.py) | 2026-09-21 |
+| C5 | Cluster submission policy | | Prepare every sbatch script first, submit nothing until approved; run at most 5 jobs at a time (`max_concurrent: 5`) | 2026-09-21 |
 | C4 | `Statistical_Test/shift.py` Drift_Harmonic FITS entry pointed at the SPM run | | Fixed on `revision`; Fig. 5 Drift FITS curve must be regenerated | 2026-09-21 |
