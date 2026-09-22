@@ -238,3 +238,25 @@ def test_vectorized_matches_reference_loop():
     assert np.max(np.abs(ref_ph[m] - new_ph[m])) < 1e-9
     m = ~np.isnan(ref_fr)
     assert np.max(np.abs(ref_fr[m] - new_fr[m])) < 1e-9
+
+
+# ------------------------------------------------------------- markov (P4.3)
+def test_transition_kl_rate_and_dwell():
+    rng = np.random.default_rng(0)
+    fs = 10.0
+
+    def chain(p, n=200_000):
+        sw = rng.random(n) < p
+        sw[0] = False
+        return np.cumsum(sw) % 2
+
+    P = F.transition_matrix(chain(0.05))
+    Q_same = F.transition_matrix(chain(0.05))
+    Q_diff = F.transition_matrix(chain(0.5))
+    assert F.transition_kl_rate(P, Q_same) < 1e-3
+    assert F.transition_kl_rate(P, Q_diff) > 0.1
+    assert F.transition_kl_rate(P, P) == 0.0
+    d = F.mean_dwell_from_matrix(P, fs)
+    assert np.all(np.abs(d - 2.0) / 2.0 < 0.1)          # p = 0.05 at 10 Hz -> 2 s dwell
+    pi = F.stationary_distribution(P)
+    assert abs(pi.sum() - 1) < 1e-12 and np.all(pi > 0.4)

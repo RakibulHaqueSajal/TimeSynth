@@ -31,6 +31,7 @@ __all__ = [
     "crps_empirical",
     "peak_freq_rfft_with_confidence", "analytic_signal_fft", "wrap_to_pi",
     "peak_freq_batch", "analytic_signal_batch",
+    "transition_matrix", "stationary_distribution", "transition_kl_rate", "mean_dwell_from_matrix",
 ]
 
 
@@ -510,3 +511,54 @@ def crps_empirical(samples, true) -> np.ndarray:
     else:
         term2 = 0.0
     return np.mean(term1 - term2, axis=1)
+
+
+# ---------------------------------------------------------------------------
+# Markov switching (P4.3)
+# ---------------------------------------------------------------------------
+def transition_matrix(states, n_states: int = 2, pseudo: float = 0.5) -> np.ndarray:
+    """
+    Row-stochastic transition matrix estimated from one or many state sequences
+    (list of 1-D int arrays or a 2-D array [N, T]); additive smoothing ``pseudo``.
+    """
+    seqs = [np.asarray(s, int) for s in (states if isinstance(states, (list, tuple)) else np.atleast_2d(states))]
+    C = np.full((n_states, n_states), pseudo, float)
+    for s in seqs:
+        if s.size < 2:
+            continue
+        np.add.at(C, (s[:-1], s[1:]), 1.0)
+    return C / C.sum(axis=1, keepdims=True)
+
+
+def stationary_distribution(P: np.ndarray) -> np.ndarray:
+    w, v = np.linalg.eig(P.T)
+    k = int(np.argmin(np.abs(w - 1.0)))
+    pi = np.real(v[:, k])
+    pi = np.abs(pi) / np.abs(pi).sum()
+    return pi
+
+
+def transition_kl_rate(P: np.ndarray, Q: np.ndarray, symmetric: bool = True) -> float:
+    """
+    KL divergence rate between two stationary Markov chains with transition
+    matrices P (reference, e.g. fitted to the true futures) and Q (fitted to the
+    predicted futures): sum_i pi_P(i) * KL(P[i, :] || Q[i, :]). With
+    ``symmetric=True`` the two directions are averaged (each weighted by its own
+    stationary distribution). Natural log; units nats per step.
+    """
+    P, Q = np.asarray(P, float), np.asarray(Q, float)
+
+    def _one(A, B):
+        pi = stationary_distribution(A)
+        with np.errstate(divide="ignore", invalid="ignore"):
+            terms = np.where(A > 0, A * np.log(A / B), 0.0)
+        return float(np.sum(pi[:, None] * terms))
+
+    return 0.5 * (_one(P, Q) + _one(Q, P)) if symmetric else _one(P, Q)
+
+
+def mean_dwell_from_matrix(P: np.ndarray, fs: float) -> np.ndarray:
+    """Expected dwell time per state in seconds: 1 / ((1 - P_ii) fs)."""
+    P = np.asarray(P, float)
+    stay = np.clip(np.diag(P), 0.0, 1.0 - 1e-12)
+    return 1.0 / ((1.0 - stay) * fs)
