@@ -47,3 +47,48 @@ def test_parse_params_roundtrip():
     name = M.file_name("test", 3, 5.0, 0.11, 0.8, 1.15, 0.1, 0.03, 0.05, 0.4)
     p = M.parse_params(name)
     assert p["D"] == 5.0 and abs(p["f1"] - 1.15) < 1e-9 and abs(p["dbeta"] - 0.03) < 1e-9
+
+
+# ------------------------------------------------------------------ Tier 2
+def _tier2(mod):
+    sys.path.insert(0, os.path.join(ROOT, "Bio_Synthesize", "Synthetic_Signals_bio"))
+    return __import__(mod)
+
+
+def test_tier2_ecg_r_peaks_match_argmax():
+    G = _tier2("tier2_ecg_dynamical")
+    rng = np.random.default_rng(0)
+    params, x, ev = G.sample(rng)
+    fs = G.FS
+    for tr in ev["r_peak_times"][2:-2]:
+        i = int(round(tr * fs))
+        lo, hi = max(0, i - 8), min(x.size, i + 9)          # +-160 ms neighbourhood
+        assert abs(lo + int(np.argmax(x[lo:hi])) - i) <= 1
+    # grid amplitudes are within sub-sample attenuation of the analytic peak (sigma_R >= 12 ms at 50 Hz)
+    assert np.all(np.array(ev["r_peak_amplitudes"]) <= 1.08 * ev["r_peak_amplitude_analytic"])  # + baseline wander
+    assert np.median(ev["r_peak_amplitudes"]) > 0.8 * ev["r_peak_amplitude_analytic"]
+    rr = np.array(ev["rr_intervals"])
+    assert abs(rr.mean() - params["rr_mean"]) < 0.05
+
+
+def test_tier2_ppg_peaks_match_argmax():
+    G = _tier2("tier2_ppg_pulse")
+    rng = np.random.default_rng(1)
+    params, x, ev = G.sample(rng)
+    fs = G.FS
+    for tp in ev["peak_times"][2:-2]:
+        i = int(round(tp * fs))
+        lo, hi = max(0, i - 8), min(x.size, i + 9)
+        assert abs(lo + int(np.argmax(x[lo:hi])) - i) <= 1
+
+
+def test_tier2_eeg_events_and_shapes():
+    G = _tier2("tier2_eeg_spikes")
+    rng = np.random.default_rng(2)
+    params, x, ev = G.sample(rng)
+    assert x.size == int(G.FS * G.DURATION)
+    assert len(ev["events"]) > 0
+    kinds = {e["kind"] for e in ev["events"]}
+    assert kinds <= {"spike", "sharp", "complex"}
+    for e in ev["events"]:
+        assert 0.02 <= e["duration"] <= 0.4
