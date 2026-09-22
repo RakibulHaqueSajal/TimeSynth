@@ -33,6 +33,38 @@ Large derived artifacts (model checkpoints, train/test predictions, per-model
 SLURM stdout, comparison CSVs, exploratory plots) are excluded via
 `.gitignore` — they are regenerable from the scripts in this repo.
 
+## Revision workflow (branch `revision`, see `REVISION_PLAN.md`)
+
+The revision adds a config-driven runner, a unified metrics module, real-data validation,
+new baselines and analysis scripts. Nothing in the legacy paths above was removed.
+
+```
+configs/models/*.yaml        hyperparameters of every model (11 paper models + TimesNet, TSMixer,
+                             SeasonalNaive, CSDI); configs/DISCREPANCIES.md records their provenance
+configs/paradigms/*.yaml     data location and windows: clean, noise, shift, state_transition,
+                             markov_dwell (redesigned), real_{ppg,ecg,eeg}_{A,B}, tier2_{ecg,ppg,eeg}
+configs/bias_groups.yaml     inductive-bias taxonomy used by every figure and table
+configs/run_matrix/*.yaml    job matrices; scripts/make_jobs.py turns them into SLURM arrays
+utils/fidelity.py            all metrics (MAE, phase, frequency, band power, xcorr lag, peaks, CRPS,
+                             transition-matrix KL rate); utils/stats.py unit-level statistics
+RealData/                    download.py, preprocess.py, splits/, MANIFEST.md
+Bio_Synthesize/Synthetic_Signals_bio/markov_dwell_pooled.py, tier2_*.py   new generators
+analysis/                    p0_reanalysis (paper predictions), p1_real ... p6_framing
+results/{paradigm}/{signal}/{model}/seed{k}/   pred.npy, true.npy, hist.npy, meta.parquet[, samples.npy]
+```
+
+One run:
+
+```bash
+python main.py --is_training 1 --model_config PatchTST --paradigm_config clean \
+    --signal Drift_Harmonic --seeds 2021 2022 2023 --results_dir results --checkpoint_dir checkpoints
+# test-only on another condition, reusing the clean checkpoint
+python main.py --is_training 2 --model_config PatchTST --paradigm_config noise --signal Drift_Harmonic \
+    --condition SNR_3 --checkpoint_name <clean checkpoint folder> --seeds 2021
+```
+
+Tests: `python -m pytest tests -q`. Cluster submission: `slurm/SUBMIT_ORDER.md`.
+
 ## Installation
 
 ```bash
