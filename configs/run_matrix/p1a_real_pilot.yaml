@@ -6,7 +6,6 @@ extra_args: --num_workers 4
 phase: p1a_real_pilot
 slurm:
   partition: general-gpu
-  account: medvic
   time: 0-06:00:00
   mem: 32G
   cpus: 6

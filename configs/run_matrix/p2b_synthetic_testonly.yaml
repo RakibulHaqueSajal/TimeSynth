@@ -6,7 +6,6 @@ extra_args: --num_workers 4
 phase: p2b_synthetic_testonly
 slurm:
   partition: general-gpu
-  account: medvic
   time: 0-02:00:00
   mem: 16G
   cpus: 4

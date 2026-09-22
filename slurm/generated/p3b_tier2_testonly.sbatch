@@ -1,7 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=p3b_tier2_testonly
 #SBATCH --partition=general-gpu
-#SBATCH --account=medvic
 #SBATCH --time=0-02:00:00
 #SBATCH --mem=16G
 #SBATCH --cpus-per-task=4

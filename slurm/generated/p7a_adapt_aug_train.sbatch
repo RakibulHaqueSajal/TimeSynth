@@ -1,7 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=p7a_adapt_aug_train
 #SBATCH --partition=general-gpu
-#SBATCH --account=medvic
 #SBATCH --time=0-12:00:00
 #SBATCH --mem=32G
 #SBATCH --cpus-per-task=6

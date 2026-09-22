@@ -1,7 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=p3a_tier2_train
 #SBATCH --partition=general-gpu
-#SBATCH --account=medvic
 #SBATCH --time=0-16:00:00
 #SBATCH --mem=48G
 #SBATCH --cpus-per-task=6

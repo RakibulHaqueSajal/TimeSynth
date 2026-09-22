@@ -6,7 +6,6 @@ extra_args: --num_workers 4
 phase: p3a_tier2_train
 slurm:
   partition: general-gpu
-  account: medvic
   time: 0-16:00:00
   mem: 48G
   cpus: 6

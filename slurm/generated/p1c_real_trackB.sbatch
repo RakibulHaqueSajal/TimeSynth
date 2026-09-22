@@ -1,7 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=p1c_real_trackB
 #SBATCH --partition=general-gpu
-#SBATCH --account=medvic
 #SBATCH --time=0-16:00:00
 #SBATCH --mem=48G
 #SBATCH --cpus-per-task=6

@@ -1,7 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=p2b_synthetic_testonly_part1
 #SBATCH --partition=general-gpu
-#SBATCH --account=medvic
 #SBATCH --time=0-02:00:00
 #SBATCH --mem=16G
 #SBATCH --cpus-per-task=4

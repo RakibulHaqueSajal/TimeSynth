@@ -1,7 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=p1a_real_pilot
 #SBATCH --partition=general-gpu
-#SBATCH --account=medvic
 #SBATCH --time=0-06:00:00
 #SBATCH --mem=32G
 #SBATCH --cpus-per-task=6
