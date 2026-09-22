@@ -80,3 +80,6 @@ fidelity_metric_illustration/*.png
 
 # P0.4 per-window metric cache (regenerable)
 analysis/p0_reanalysis/cache/
+
+# analysis per-window caches (regenerable)
+analysis/cache/
