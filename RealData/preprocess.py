@@ -12,8 +12,8 @@ Track A (rhythm band):   bandpass around the dominant rhythm, resample
 Track B (morphology, ECG and PPG only):  lowpass 20 Hz -> 50 Hz (windows 250 / 500, D5)
 
 Artifact handling: the resampled recording is scanned in 5 s segments; segments
-that are flat, contain non-finite values, or exceed 6 robust SDs (MAD) are
-marked bad, and the recording is cut into contiguous clean chunks of at least
+that are flat, contain non-finite values, or whose peak deviation exceeds 3x the
+recording's 99.5th percentile of |x - median| are marked bad, and the recording is cut into contiguous clean chunks of at least
 one window length. Each chunk becomes one CSV ``<subject>__<record>__c<k>.csv``
 with columns ``Time`` (s) and ``Value``.
 
@@ -70,19 +70,26 @@ def resample(x, fs_in, fs_out):
     return resample_poly(x, fr.numerator, fr.denominator)
 
 
-def bad_segments(x, fs, seg_s=5.0, z_thresh=6.0):
-    """Boolean mask over samples: True where the 5 s segment is an artifact."""
+def bad_segments(x, fs, seg_s=5.0, amp_factor=3.0, pct=99.5):
+    """
+    Boolean mask over samples: True where the 5 s segment is an artifact.
+    A segment is bad if it is non-finite, flat, or its peak deviation from the
+    recording median exceeds ``amp_factor`` times the recording's ``pct``-th
+    percentile of |x - median| (morphology-agnostic: QRS complexes and PPG
+    systolic peaks are within the percentile, electrode pops and motion are not).
+    """
     n = int(seg_s * fs)
     med = np.median(x)
-    mad = np.median(np.abs(x - med)) * 1.4826 + 1e-12
+    ref = np.percentile(np.abs(x - med), pct) + 1e-12
+    glob_sd = np.std(x) + 1e-12
     bad = np.zeros(x.size, bool)
     for s in range(0, x.size, n):
         seg = x[s:s + n]
         if seg.size < n // 2:
             bad[s:] = True
             break
-        if (not np.all(np.isfinite(seg))) or seg.std() < 1e-6 * (mad + 1e-12) \
-                or np.max(np.abs(seg - med)) > z_thresh * mad:
+        if (not np.all(np.isfinite(seg))) or seg.std() < 1e-3 * glob_sd \
+                or np.max(np.abs(seg - med)) > amp_factor * ref:
             bad[s:s + n] = True
     return bad
 

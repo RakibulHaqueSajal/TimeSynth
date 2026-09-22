@@ -111,6 +111,20 @@ def job_command(matrix: Dict, j: Dict) -> str:
     return cmd
 
 
+MAX_ARRAY = 1000   # cluster MaxArraySize is 1001
+
+
+def write_scripts(matrix: Dict, jobs: List[Dict]) -> List[str]:
+    """Split into arrays of at most MAX_ARRAY elements: <phase>.sbatch or <phase>_partK.sbatch."""
+    if len(jobs) <= MAX_ARRAY:
+        return [write_script(matrix, jobs)]
+    paths = []
+    for k in range(0, len(jobs), MAX_ARRAY):
+        sub = dict(matrix, phase=f"{matrix['phase']}_part{k // MAX_ARRAY}")
+        paths.append(write_script(sub, jobs[k:k + MAX_ARRAY]))
+    return paths
+
+
 def write_script(matrix: Dict, jobs: List[Dict]) -> str:
     os.makedirs(GEN_DIR, exist_ok=True)
     phase = matrix["phase"]
@@ -165,6 +179,7 @@ def main():
     ap.add_argument("--ssh", default=None, help="submit through 'ssh <host> sbatch ...'")
     ap.add_argument("--dry", action="store_true", help="only list the jobs")
     ap.add_argument("--include-done", action="store_true", help="do not skip jobs whose pred.npy exists")
+    ap.add_argument("--after", default=None, help="SLURM job id: submit with --dependency=afterany:<id>")
     a = ap.parse_args()
 
     matrix = load_yaml(a.matrix)
@@ -178,14 +193,16 @@ def main():
     if not todo:
         print("nothing to do")
         return
-    path = write_script(matrix, todo)
-    print("wrote", path)
+    paths = write_scripts(matrix, todo)
+    for path in paths:
+        print("wrote", path)
     if a.submit:
-        cmd = ["sbatch", path]
-        if a.ssh:
-            cmd = ["ssh", a.ssh, " ".join(shlex.quote(c) for c in cmd)]
-        print("+", " ".join(cmd))
-        subprocess.run(cmd, check=True)
+        for path in paths:
+            cmd = ["sbatch"] + ([f"--dependency=afterany:{a.after}"] if a.after else []) + [path]
+            if a.ssh:
+                cmd = ["ssh", a.ssh, " ".join(shlex.quote(c) for c in cmd)]
+            print("+", " ".join(cmd))
+            subprocess.run(cmd, check=True)
 
 
 if __name__ == "__main__":

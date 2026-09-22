@@ -1,0 +1,28 @@
+# Tier 2 transient-rich ECG (Phase 3, D5). Same 5 s history / 10 s horizon in seconds.
+# Train stride > 1 keeps the window list in memory; test windows are non-overlapping. Noise conditions
+# are test-only evaluations of the clean checkpoint on the per-SNR noisy test copies.
+name: tier2_ecg
+fs: 50.0
+data_root_rel: Tier2_ECG
+signals:
+  ECG: ""
+args:
+  data: custom
+  task_name: long_term_forecast
+  features: S
+  target: Value
+  enc_in: 1
+  seq_len: 250
+  label_len: 0
+  pred_len: 500
+  train_stride: 10
+  eval_stride: 750
+  test_drop_last: false
+  batch_size: 64
+conditions:
+  SNR_1: noise_SNR_1
+  SNR_2: noise_SNR_2
+  SNR_3: noise_SNR_3
+  SNR_4: noise_SNR_4
+  SNR_5: noise_SNR_5
+  SNR_6: noise_SNR_6

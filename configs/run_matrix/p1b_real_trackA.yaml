@@ -1,0 +1,46 @@
+results_dir: /uufs/sci.utah.edu/projects/medvic-lab/Rakib/Time_Series/TimeSynth_runs/revision/results
+checkpoint_dir: /uufs/sci.utah.edu/projects/medvic-lab/Rakib/Time_Series/TimeSynth_runs/revision/checkpoints
+env:
+  conda_python: /uufs/sci.utah.edu/projects/medvic-lab/Rakib/miniconda3/envs/timeenv/bin/python
+extra_args: --num_workers 4
+phase: p1b_real_trackA
+slurm:
+  partition: general-gpu
+  account: medvic
+  time: 0-12:00:00
+  mem: 32G
+  cpus: 6
+  gres: gpu:1
+  max_concurrent: 5
+blocks:
+- paradigm: real_ppg_A
+  models: &id001
+  - Linear
+  - DLinear
+  - FITS
+  - MLinear
+  - NBeats
+  - FreMLP
+  - MICN_Mean
+  - MICN_Regre
+  - ModernTCN
+  - PatchTST
+  - Transformer
+  - Autoformer
+  - TimesNet
+  - TSMixer
+  - SeasonalNaive
+  - CSDI
+  seeds: &id002
+  - 2021
+  - 2022
+  - 2023
+  is_training: 1
+- paradigm: real_ecg_A
+  models: *id001
+  seeds: *id002
+  is_training: 1
+- paradigm: real_eeg_A
+  models: *id001
+  seeds: *id002
+  is_training: 1

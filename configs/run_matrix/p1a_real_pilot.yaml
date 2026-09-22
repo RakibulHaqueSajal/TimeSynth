@@ -1,0 +1,26 @@
+results_dir: /uufs/sci.utah.edu/projects/medvic-lab/Rakib/Time_Series/TimeSynth_runs/revision/results
+checkpoint_dir: /uufs/sci.utah.edu/projects/medvic-lab/Rakib/Time_Series/TimeSynth_runs/revision/checkpoints
+env:
+  conda_python: /uufs/sci.utah.edu/projects/medvic-lab/Rakib/miniconda3/envs/timeenv/bin/python
+extra_args: --num_workers 4
+phase: p1a_real_pilot
+slurm:
+  partition: general-gpu
+  account: medvic
+  time: 0-06:00:00
+  mem: 32G
+  cpus: 6
+  gres: gpu:1
+  max_concurrent: 5
+blocks:
+- paradigm: real_ppg_A
+  signals:
+  - BIDMC
+  models:
+  - Linear
+  - PatchTST
+  - Transformer
+  - CSDI
+  seeds:
+  - 2021
+  is_training: 1

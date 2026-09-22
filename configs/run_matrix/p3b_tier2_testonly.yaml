@@ -1,0 +1,66 @@
+results_dir: /uufs/sci.utah.edu/projects/medvic-lab/Rakib/Time_Series/TimeSynth_runs/revision/results
+checkpoint_dir: /uufs/sci.utah.edu/projects/medvic-lab/Rakib/Time_Series/TimeSynth_runs/revision/checkpoints
+env:
+  conda_python: /uufs/sci.utah.edu/projects/medvic-lab/Rakib/miniconda3/envs/timeenv/bin/python
+extra_args: --num_workers 4
+phase: p3b_tier2_testonly
+slurm:
+  partition: general-gpu
+  account: medvic
+  time: 0-02:00:00
+  mem: 16G
+  cpus: 4
+  gres: gpu:1
+  max_concurrent: 5
+blocks:
+- paradigm: tier2_ecg
+  conditions:
+  - SNR_1
+  - SNR_2
+  - SNR_3
+  - SNR_4
+  - SNR_5
+  - SNR_6
+  models: &id001
+  - Linear
+  - DLinear
+  - FITS
+  - MLinear
+  - NBeats
+  - FreMLP
+  - MICN_Mean
+  - MICN_Regre
+  - ModernTCN
+  - PatchTST
+  - Transformer
+  - Autoformer
+  - TimesNet
+  - TSMixer
+  - SeasonalNaive
+  seeds: &id002
+  - 2021
+  - 2022
+  - 2023
+  is_training: 2
+- paradigm: tier2_ppg
+  conditions:
+  - SNR_1
+  - SNR_2
+  - SNR_3
+  - SNR_4
+  - SNR_5
+  - SNR_6
+  models: *id001
+  seeds: *id002
+  is_training: 2
+- paradigm: tier2_eeg
+  conditions:
+  - SNR_1
+  - SNR_2
+  - SNR_3
+  - SNR_4
+  - SNR_5
+  - SNR_6
+  models: *id001
+  seeds: *id002
+  is_training: 2

@@ -1,0 +1,5 @@
+idx	model	paradigm	condition	signal	seed	out
+0	Linear	real_ppg_A		BIDMC	2021	/uufs/sci.utah.edu/projects/medvic-lab/Rakib/Time_Series/TimeSynth_runs/revision/results/real_ppg_A/BIDMC/Linear/seed2021/pred.npy
+1	PatchTST	real_ppg_A		BIDMC	2021	/uufs/sci.utah.edu/projects/medvic-lab/Rakib/Time_Series/TimeSynth_runs/revision/results/real_ppg_A/BIDMC/PatchTST/seed2021/pred.npy
+2	Transformer	real_ppg_A		BIDMC	2021	/uufs/sci.utah.edu/projects/medvic-lab/Rakib/Time_Series/TimeSynth_runs/revision/results/real_ppg_A/BIDMC/Transformer/seed2021/pred.npy
+3	CSDI	real_ppg_A		BIDMC	2021	/uufs/sci.utah.edu/projects/medvic-lab/Rakib/Time_Series/TimeSynth_runs/revision/results/real_ppg_A/BIDMC/CSDI/seed2021/pred.npy
