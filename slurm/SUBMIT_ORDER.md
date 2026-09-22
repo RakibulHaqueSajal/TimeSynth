@@ -33,23 +33,28 @@ Concurrency: at most five jobs running in total, so exactly one array is submitt
 Queuing several arrays at once would run 5 x (number of arrays) jobs concurrently, which the
 current policy does not allow: submit the next array only when the previous one has drained.
 
-## Compute estimate (workstation RTX-class GPU, 10 Hz clean paradigm; the pilot refines this)
+## Compute estimate
+
+Measured in the pilot (`p1a_real_pilot`, BIDMC Track A, one seed, general-gpu):
+Linear 3 min, CSDI 8 min, Transformer 9 min, PatchTST 16 min. BIDMC Track A has only
+1183 training windows; DaLiA (5645) and Sleep-EDF (84000) are larger, and the 10 Hz synthetic
+clean paradigm has ~57000 stride-1 windows per signal, so those jobs take proportionally longer.
 
 | job type | per job | count | GPU hours |
 |---|---|---|---|
-| small models (Linear, DLinear, FITS, MLinear, NBeats, FreMLP, TSMixer, naive), 10 Hz | 5 to 25 min | ~370 | ~90 |
-| CNN (ModernTCN, MICN x2), 10 Hz | ~45 min | ~140 | ~105 |
-| Transformer family (PatchTST, Transformer, Autoformer, TimesNet), 10 Hz | 1.5 to 3 h | ~190 | ~430 |
-| CSDI, 10 Hz (100 epochs, 52 s/epoch measured) | ~2 h | ~50 | ~100 |
-| any model at 750 to 1500 samples (Track B, Tier 2) | 2 to 5x the above | ~315 | ~450 |
-| test-only evaluations (incl. CSDI sampling) | 2 to 10 min | ~2750 | ~200 |
-| **total** | | **~4050** | **~1400 GPU h** |
+| real Track A, small datasets (BIDMC, NSRDB, AFDB) | 3 to 16 min | ~140 | ~20 |
+| real Track A, large datasets (DaLiA, Sleep-EDF) | 0.5 to 3 h | ~100 | ~120 |
+| real Track B (50 Hz, 750-sample windows) | 0.5 to 2 h | ~180 | ~150 |
+| synthetic 10 Hz training (stride 1, ~57k windows) | 0.5 to 3 h | ~240 | ~300 |
+| Tier 2 training (50 to 100 Hz, long windows) | 1 to 4 h | ~135 | ~250 |
+| test-only evaluations (incl. CSDI sampling) | 2 to 15 min | ~2750 | ~250 |
+| adaptation arm | 0.5 to 3 h | ~390 | ~100 |
+| **total** | | **~3935** | **~1200 GPU h** |
 
-At five concurrent jobs that is roughly 12 days of wall-clock, which does not fit the
-2026-10-05 deadline with margin. Recommendation: raise `max_concurrent` to 15 to 20 for the
-test-only arrays (they are short) and to 10 for training arrays; edit the `slurm:` block in the
-matrix YAML and regenerate. The `medvic` partition (2 x 4 H200) can take a second copy of the
-training arrays with `partition: medvic`.
+At five concurrent jobs that is roughly 10 days of wall-clock, which is tight against the
+2026-10-05 deadline. Options, in the order I would take them: raise `max_concurrent` for the
+short test-only arrays (they dominate the job count but not the hours), then raise it for the
+training arrays, and only then consider the `medvic` partition.
 
 ## After each array finishes
 
