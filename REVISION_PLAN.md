@@ -381,12 +381,16 @@ Final roster: 11 existing models, TimesNet, TSMixer, CSDI, and seasonal naive, w
 
 Noise and shift remain test-only on clean checkpoints, so they add inference but no training. Fill in wall-clock hours per job type after the Phase 1 pilot, then multiply out here before submitting the large arrays.
 
-| Job type | Measured GPU hours per job | Jobs | Total |
+| Job type | GPU hours per job (workstation estimate; pilot `p1a_real_pilot` refines) | Jobs | Total |
 |----------|---------------------------|------|-------|
-| Small models, 10 Hz | TBD | | |
-| Transformer family, 10 Hz | TBD | | |
-| CSDI, 10 Hz | TBD | | |
-| Any model, 50 Hz Tier 2 or Track B | TBD | | |
+| Small models, 10 Hz | 0.1 to 0.4 | ~370 | ~90 |
+| CNN family, 10 Hz | ~0.75 | ~140 | ~105 |
+| Transformer family, 10 Hz | 1.5 to 3 | ~190 | ~430 |
+| CSDI, 10 Hz | ~2 (52 s/epoch measured, 100 epochs) | ~50 | ~100 |
+| Any model, 50 Hz Tier 2 or Track B | 2 to 5x the 10 Hz figure | ~315 | ~450 |
+| Test-only evaluations | 0.03 to 0.15 | ~2750 | ~200 |
+
+About 1400 GPU hours in total, roughly 12 days of wall-clock at five concurrent jobs (policy C5). See `slurm/SUBMIT_ORDER.md` for the order, dependencies and the recommendation to raise concurrency for the test-only arrays.
 
 ---
 
