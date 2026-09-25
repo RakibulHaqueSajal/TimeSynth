@@ -69,6 +69,9 @@ if __name__ == '__main__':
     parser.add_argument('--test_drop_last', type=str2bool, default=True,
                         help='drop the last partial test batch (paper behavior). Revision runs use False')
     parser.add_argument('--fs', type=float, default=10.0, help='sampling rate in Hz (recorded in meta)')
+    parser.add_argument('--max_train_windows', type=int, default=None,
+                        help='uniform cap on training windows per dataset (evenly spaced), so datasets of very '
+                             'different length get a comparable training budget')
     parser.add_argument('--max_windows_per_file', type=int, default=None,
                         help='cap on val/test windows per file (evenly spaced), so long recordings do not dominate')
     parser.add_argument('--save_legacy_arrays', type=str2bool, default=True,

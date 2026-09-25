@@ -18,4 +18,5 @@ args:
   train_stride: 20
   eval_stride: 150
   test_drop_last: false
+  max_train_windows: 35000    # uniform training budget (P1.4); binds only for DaLiA and Sleep-EDF
   max_windows_per_file: 200

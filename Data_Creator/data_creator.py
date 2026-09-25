@@ -23,7 +23,8 @@ class Dataset_Custom(Dataset):
                  pad_short_y=False,            # NEW: option to pad y if it's too short
                  stride=1,                     # P0.2: window stride (1 = legacy behavior)
                  max_windows_per_file=None,    # P1.3: cap (evenly spaced) so long recordings do not dominate
-                 aug_rescale=None):            # P7: (lo, hi) random time-rescaling factor for training windows
+                 aug_rescale=None,             # P7: (lo, hi) random time-rescaling factor for training windows
+                 max_windows_total=None):      # P1.4: uniform training-budget cap (evenly spaced over the split)
         """
         Parameters:
         - size: [seq_len, label_len, pred_len]
@@ -43,6 +44,7 @@ class Dataset_Custom(Dataset):
         self.stride = max(1, int(stride))
         self.max_windows_per_file = int(max_windows_per_file) if max_windows_per_file else None
         self.aug_rescale = tuple(aug_rescale) if aug_rescale else None
+        self.max_windows_total = int(max_windows_total) if max_windows_total else None
         self._files = []      # per-file value arrays, for on-the-fly augmentation
         self.meta = []   # one (file_id, file_name, window_start) per sample, same order as self.samples
 
@@ -130,6 +132,15 @@ class Dataset_Custom(Dataset):
 
                 self.samples.append((x, y, x_stamp, y_stamp))
                 self.meta.append((file_id, os.path.basename(fp), s_beg))
+
+        if self.max_windows_total and len(self.samples) > self.max_windows_total:
+            # evenly spaced subsample across the whole split, so every file keeps a proportional share
+            sel = np.linspace(0, len(self.samples) - 1, self.max_windows_total).round().astype(int)
+            sel = np.unique(sel)
+            n_before = len(self.samples)
+            self.samples = [self.samples[i] for i in sel]
+            self.meta = [self.meta[i] for i in sel]
+            print(f"[{self.flag}] Capped {n_before} -> {len(self.samples)} windows (max_windows_total).")
 
         print(f"[{self.flag}] Loaded {len(self.samples)} samples (stride={self.stride}).")
 

@@ -242,6 +242,7 @@ def data_provider(args, flag):
         stride=(getattr(args, "train_stride", 1) if flag == "train" else getattr(args, "eval_stride", 1)),
         max_windows_per_file=(None if flag == "train" else getattr(args, "max_windows_per_file", None)),
         aug_rescale=(getattr(args, "aug_rescale", None) if flag == "train" else None),
+        max_windows_total=(getattr(args, "max_train_windows", None) if flag == "train" else None),
     )
 
     if flag == "train":
