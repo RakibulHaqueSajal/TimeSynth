@@ -53,7 +53,14 @@ TRACKS = {
     ("ppg", "B"): dict(band=(0.3, 20.0), fs_out=50.0, seq_len=250, pred_len=500),
     ("ecg", "B"): dict(band=(0.5, 20.0), fs_out=50.0, seq_len=250, pred_len=500),
 }
+# Default split. Datasets with few subjects use a larger test fraction so that the subject-level
+# statistics of Phase 5 have enough units: with three test subjects a two-sided Wilcoxon signed-rank
+# test cannot fall below p = 0.25. Primary datasets (D1) must reach at least six test subjects.
 SPLIT_FRACS = (0.7, 0.1, 0.2)
+SPLIT_FRACS_BY_DATASET = {
+    "nsrdb": (0.5, 0.15, 0.35),      # 18 subjects -> 9 / 3 / 6
+    "sleepedfx": (0.5, 0.15, 0.35),  # 20 subjects -> 10 / 3 / 7
+}
 SEED = 0
 
 
@@ -144,15 +151,16 @@ def subjects_of(dataset, records):
 
 def make_splits(dataset, subject_list, seed=SEED):
     rng = np.random.default_rng(seed)
+    fracs = SPLIT_FRACS_BY_DATASET.get(dataset, SPLIT_FRACS)
     subs = sorted(subject_list)
     perm = list(rng.permutation(subs))
     n = len(perm)
-    n_train = int(round(SPLIT_FRACS[0] * n))
-    n_val = max(1, int(round(SPLIT_FRACS[1] * n)))
+    n_train = int(round(fracs[0] * n))
+    n_val = max(1, int(round(fracs[1] * n)))
     n_test = n - n_train - n_val
     if n_test < 1:
         n_test, n_train = 1, n_train - 1
-    return {"seed": seed, "fractions": SPLIT_FRACS,
+    return {"seed": seed, "fractions": fracs,
             "train": perm[:n_train], "val": perm[n_train:n_train + n_val], "test": perm[n_train + n_val:]}
 
 

@@ -59,3 +59,23 @@ The superseded outputs are archived under
 Methods wording: "Training windows were capped at 35000 per dataset by evenly spaced
 subsampling, so that datasets of very different recording length contribute a comparable
 training budget."
+
+## 4. Too few test subjects for subject-level statistics (fixed 2026-09-26, Rakib's decision)
+
+The 70/10/20 subject split gave: BIDMC 11 test subjects, AFDB 4, Sleep-EDF 4, DaLiA 3, NSRDB 3.
+A two-sided Wilcoxon signed-rank test over n = 3 units cannot produce p below 0.25, so the
+subject-level statistics that answer R4.6 were unreachable on two of the three primary datasets.
+
+Decision (Rakib, 2026-09-26): re-split the primary ECG and EEG datasets only.
+`RealData/preprocess.py::SPLIT_FRACS_BY_DATASET` now uses 50/15/35 for `nsrdb` and `sleepedfx`,
+giving NSRDB 9/3/6 and Sleep-EDF 10/3/7 subjects. BIDMC keeps 70/10/20 (37/5/11).
+DaLiA (3) and AFDB (4) stay as secondary datasets and are reported with effect sizes and
+bootstrap CIs, without p-values.
+
+Affected runs archived under `TimesNet_runs/revision/superseded_smallsplit/` and re-submitted in
+`p1d_real_remaining` (job 205496): NSRDB Track A and B, Sleep-EDF Track A. Track B for BIDMC,
+DaLiA and AFDB was unaffected and its completed runs were reused.
+
+Methods wording: "Recordings were split by subject, 70/10/20 for datasets with many subjects and
+50/15/35 for MIT-BIH NSR and Sleep-EDF, so that every primary dataset has at least six test
+subjects for the subject-level tests."
