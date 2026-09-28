@@ -123,19 +123,45 @@ def _tag_state_transition(meta: pd.DataFrame, tt: pd.DataFrame) -> pd.DataFrame:
 
 
 def _tag_real_events(meta: pd.DataFrame, paradigm: str, signal: str, condition: Optional[str], fs: float) -> pd.DataFrame:
+    """
+    Tag each window by the natural event nearest to its forecast boundary, in the same H/F form
+    as the synthetic state-transition paradigm (Fig. 7):
+
+        event_rel_s      event time minus forecast-boundary time (negative: inside the history)
+        event_tag        H (in the history), F (in the horizon), or "" if no event touches the window
+        event_label      the label of that event (AF_onset, activity_k, stage_k)
+
+    Test windows tile the recording contiguously (stride = seq_len + pred_len), so horizons cover
+    only pred_len of every seq_len + pred_len samples. Restricting the analysis to events inside a
+    horizon would therefore silently discard a third of them, and would drop every AF onset that
+    happens to land in a history. Reporting metrics against `event_rel_s` uses all of them and is
+    the real-data analogue of the H/F tags.
+    """
     meta = meta.copy()
     meta["subject"] = meta.file_name.str.split("__").str[0]
     meta["unit"] = meta["subject"]
     L, H = int(meta.seq_len.iloc[0]), int(meta.pred_len.iloc[0])
-    cache, tags = {}, []
+    cache = {}
+    rel, tag, lab = [], [], []
     for fn, ws in zip(meta.file_name, meta.window_start):
         if fn not in cache:
             ev = _events_sidecar(paradigm, signal, condition, fn)
             cache[fn] = ev["events"] if ev else []
-        t0, t1 = (ws + L) / fs, (ws + L + H) / fs
-        lab = [e["label"] for e in cache[fn] if t0 <= e["t"] < t1]
-        tags.append(lab[0] if lab else "")
-    meta["event_in_horizon"] = tags
+        evs = cache[fn]
+        t_hist0, t_bound, t_end = ws / fs, (ws + L) / fs, (ws + L + H) / fs
+        inside = [e for e in evs if t_hist0 <= e["t"] < t_end]
+        if not inside:
+            rel.append(np.nan); tag.append(""); lab.append("")
+            continue
+        e = min(inside, key=lambda e: abs(e["t"] - t_bound))
+        r = e["t"] - t_bound
+        rel.append(r)
+        tag.append("H" if r < 0 else "F")
+        lab.append(str(e["label"]))
+    meta["event_rel_s"] = rel
+    meta["event_tag"] = tag
+    meta["event_label"] = lab
+    meta["event_in_horizon"] = [t == "F" for t in tag]
     return meta
 
 

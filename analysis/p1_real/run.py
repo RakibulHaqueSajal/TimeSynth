@@ -90,10 +90,14 @@ def main():
                             if ms:
                                 out_rows_bg.append(dict(dataset=ds, track=par[-1], synthetic_family=fam, metric=m,
                                                         group=grp, mean_rank_syn=rs[ms].mean(), mean_rank_real=rr[ms].mean(), n_models=len(ms)))
-            # natural events: windows with an event inside the horizon vs none, per model
-            if "event_in_horizon" in d.columns and (d.event_in_horizon != "").any():
-                for (model, has), g in d.groupby(["model", d.event_in_horizon != ""]):
-                    ev = dict(dataset=ds, track=par[-1], model=model, event_in_horizon=bool(has), n_windows=len(g))
+            # natural events (P1.6 item 4): metrics against the event position relative to the
+            # forecast boundary, H (history) / F (horizon) / none, as in the synthetic Fig. 7
+            if "event_tag" in d.columns and (d.event_tag != "").any():
+                for (model, tg), g in d.groupby(["model", "event_tag"]):
+                    ev = dict(dataset=ds, track=par[-1], model=model,
+                              event_tag=(tg or "none"), n_windows=len(g),
+                              labels=";".join(sorted(set(g.event_label) - {""})) or "",
+                              mean_rel_s=float(g.event_rel_s.mean()) if tg else np.nan)
                     for m in metrics:
                         ev[m] = g[m].mean()
                     events.append(ev)
