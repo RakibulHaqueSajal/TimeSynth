@@ -104,9 +104,9 @@ class TimeFeatureEmbedding(nn.Module):
         assert D == self.embed.in_features, \
             f"Expected last dim {self.embed.in_features}, got {D}. Check if your time feature dimension matches the freq."
 
-        x = x.view(-1, D)       # (B*L, d_inp)
-        x = self.embed(x)       # (B*L, d_model)
-        x = x.view(B, L, -1)    # (B, L, d_model)
+        x = x.reshape(-1, D)    # (B*L, d_inp); reshape, since the encoder input is a slice and
+        x = self.embed(x)       # therefore not contiguous
+        x = x.reshape(B, L, -1)  # (B, L, d_model)
         return x
 
 class DataEmbedding(nn.Module):
@@ -120,11 +120,19 @@ class DataEmbedding(nn.Module):
             d_model=d_model, embed_type=embed_type, freq=freq)
         self.dropout = nn.Dropout(p=dropout)
 
+    # The paper's code applied the temporal embedding only when x_mark.shape[1] == 125, a
+    # hard-coded sequence length. With seq_len = 50 the encoder sees 25 steps, so every published
+    # run in fact used value + position embeddings only. Track B (seq_len 250, encoder half 125)
+    # was the first configuration to hit that branch. Rather than let the embedding switch itself
+    # on as a side effect of the window length, it is now off by default and controlled explicitly:
+    # synthetic timestamps are uniform and carry no information, and on real data wall-clock
+    # features would encode recording identity rather than physiology.
+    USE_TEMPORAL_EMBEDDING = False
+
     def forward(self, x, x_mark):
-        if x_mark.shape[1]==125:
-            x = self.value_embedding(x) + self.position_embedding(x) + self.temporal_embedding(x_mark)
-        else:
-            x = self.value_embedding(x) + self.position_embedding(x) 
+        x = self.value_embedding(x) + self.position_embedding(x)
+        if self.USE_TEMPORAL_EMBEDDING and x_mark is not None:
+            x = x + self.temporal_embedding(x_mark)
         return self.dropout(x)
 
 
@@ -137,11 +145,9 @@ class DataEmbedding_wo_temp(nn.Module):
         self.dropout = nn.Dropout(p=dropout)
 
     def forward(self, x, x_mark=None):
-        if x_mark.shape[1]==125:
-            x = self.value_embedding(x) + self.position_embedding(x) + self.temporal_embedding(x_mark)
-        else:
-            x = self.value_embedding(x) + self.position_embedding(x) 
-        
+        # "wo_temp" = without temporal embedding; this class never defines one. The previous
+        # x_mark.shape[1] == 125 branch would have raised AttributeError had it ever been taken.
+        x = self.value_embedding(x) + self.position_embedding(x)
         return self.dropout(x)
 
 
@@ -159,13 +165,13 @@ class DataEmbedding_wo_pos(nn.Module):
         self.dropout = nn.Dropout(p=dropout)
 
     def forward(self, x, x_mark):
+        # Same policy as DataEmbedding: the temporal embedding is off unless explicitly enabled,
+        # instead of switching itself on at one hard-coded sequence length.
         if x_mark is None:
-            x = self.value_embedding(x)
-        else:
-            if x_mark.shape[1]==125:
-               x = self.value_embedding(x) + self.position_embedding(x) + self.temporal_embedding(x_mark)
-            else:
-               x = self.value_embedding(x) + self.position_embedding(x) 
+            return self.dropout(self.value_embedding(x))
+        x = self.value_embedding(x) + self.position_embedding(x)
+        if DataEmbedding.USE_TEMPORAL_EMBEDDING:
+            x = x + self.temporal_embedding(x_mark)
         return self.dropout(x)
 
 

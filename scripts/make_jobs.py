@@ -163,7 +163,10 @@ def write_script(matrix: Dict, jobs: List[Dict]) -> str:
     lines += ["",
               'echo "[$(date)] task $SLURM_ARRAY_TASK_ID on $(hostname): ${CMDS[$SLURM_ARRAY_TASK_ID]}"',
               'eval "${CMDS[$SLURM_ARRAY_TASK_ID]}"',
-              'echo "[$(date)] exit $?"']
+              'rc=$?',
+              'echo "[$(date)] exit $rc"',
+              # propagate the failure so SLURM does not report COMPLETED for a crashed run
+              'exit $rc']
     path = os.path.join(GEN_DIR, f"{phase}.sbatch")
     with open(path, "w") as f:
         f.write("\n".join(lines) + "\n")

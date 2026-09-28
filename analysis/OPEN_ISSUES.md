@@ -79,3 +79,41 @@ DaLiA and AFDB was unaffected and its completed runs were reused.
 Methods wording: "Recordings were split by subject, 70/10/20 for datasets with many subjects and
 50/15/35 for MIT-BIH NSR and Sleep-EDF, so that every primary dataset has at least six test
 subjects for the subject-level tests."
+
+## 5. Hard-coded sequence length in the transformer embedding (found and fixed 2026-09-27)
+
+`Layers/Transformers_Embed.py` (original code, commit 95a9f3b) gated the temporal embedding on a
+hard-coded window length, in three separate classes:
+
+    if x_mark.shape[1] == 125:
+        x = value + position + temporal_embedding(x_mark)
+    else:
+        x = value + position
+
+Consequences:
+
+* Every published run used `seq_len = 50`, so the encoder half was 25 steps and the branch was
+  never taken. Transformer, Autoformer and TimesNet therefore never used time features in the
+  paper, although the Supplement describes a `DataEmbedding` with them.
+* Real-data Track B uses `seq_len = 250`, so the encoder half is exactly 125 and the branch fired
+  for the first time. It then crashed in `TimeFeatureEmbedding.forward` on `x.view(-1, D)`,
+  because the encoder input `batch_x[:, :half, :]` is not contiguous. 24 jobs (Transformer and
+  Autoformer, 4 datasets x 3 seeds) produced no output while SLURM still reported success, since
+  the traceback did not change the exit code.
+* `DataEmbedding_wo_temp` has no `temporal_embedding` attribute at all, so the branch would have
+  raised `AttributeError` had it ever been taken there.
+
+Fix: `.view` to `.reshape`, and the temporal embedding is now controlled by
+`DataEmbedding.USE_TEMPORAL_EMBEDDING`, default `False`, instead of switching itself on at one
+window length. That default reproduces the behavior of every completed run exactly
+(`tests/test_embedding.py::test_matches_paper_behavior_for_completed_runs`), so no finished
+result is invalidated, and it is the defensible choice: synthetic timestamps are uniform, and on
+real data wall-clock features encode recording identity rather than physiology.
+
+Note for the Supplement: state that the transformer family uses value and positional embeddings
+only.
+
+Open risk of the same kind: a job whose python process dies with a traceback still exits 0 in the
+array script, so SLURM reports COMPLETED. `scripts/validate_jobs.py` and the `pred.npy` existence
+check in `make_jobs.py` are what actually catch this; always compare result counts against the
+job matrix after an array finishes.
