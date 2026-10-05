@@ -1,0 +1,217 @@
+dataset,track,synthetic_family,metric,group,mean_rank_syn,mean_rank_real,n_models
+BIDMC,A,Drift_Harmonic,mae,Local receptive field,7.0,4.5,4
+BIDMC,A,Drift_Harmonic,mae,Global attention,8.0,7.0,1
+BIDMC,A,Drift_Harmonic,mae,Decomposition,10.75,12.5,4
+BIDMC,A,Drift_Harmonic,mae,Linear and MLP,6.25,9.0,4
+BIDMC,A,Drift_Harmonic,mae,Probabilistic,7.0,8.0,1
+BIDMC,A,Drift_Harmonic,mae,Floor,9.0,1.0,1
+BIDMC,A,Drift_Harmonic,phase,Local receptive field,4.5,3.75,4
+BIDMC,A,Drift_Harmonic,phase,Global attention,9.0,7.0,1
+BIDMC,A,Drift_Harmonic,phase,Decomposition,10.75,12.25,4
+BIDMC,A,Drift_Harmonic,phase,Linear and MLP,7.25,10.0,4
+BIDMC,A,Drift_Harmonic,phase,Probabilistic,10.0,8.0,1
+BIDMC,A,Drift_Harmonic,phase,Floor,11.0,1.0,1
+BIDMC,A,Drift_Harmonic,freq,Local receptive field,5.0,3.5,4
+BIDMC,A,Drift_Harmonic,freq,Global attention,11.0,7.0,1
+BIDMC,A,Drift_Harmonic,freq,Decomposition,12.25,10.25,4
+BIDMC,A,Drift_Harmonic,freq,Linear and MLP,7.25,11.0,4
+BIDMC,A,Drift_Harmonic,freq,Probabilistic,10.0,13.0,1
+BIDMC,A,Drift_Harmonic,freq,Floor,1.0,1.0,1
+DaLiA,A,Drift_Harmonic,mae,Local receptive field,7.0,4.75,4
+DaLiA,A,Drift_Harmonic,mae,Global attention,8.0,4.0,1
+DaLiA,A,Drift_Harmonic,mae,Decomposition,10.75,11.0,4
+DaLiA,A,Drift_Harmonic,mae,Linear and MLP,6.25,6.5,4
+DaLiA,A,Drift_Harmonic,mae,Probabilistic,7.0,12.0,1
+DaLiA,A,Drift_Harmonic,mae,Floor,9.0,15.0,1
+DaLiA,A,Drift_Harmonic,phase,Local receptive field,4.5,4.5,4
+DaLiA,A,Drift_Harmonic,phase,Global attention,9.0,9.0,1
+DaLiA,A,Drift_Harmonic,phase,Decomposition,10.75,12.5,4
+DaLiA,A,Drift_Harmonic,phase,Linear and MLP,7.25,7.0,4
+DaLiA,A,Drift_Harmonic,phase,Probabilistic,10.0,13.0,1
+DaLiA,A,Drift_Harmonic,phase,Floor,11.0,2.0,1
+DaLiA,A,Drift_Harmonic,freq,Local receptive field,5.0,3.5,4
+DaLiA,A,Drift_Harmonic,freq,Global attention,11.0,10.0,1
+DaLiA,A,Drift_Harmonic,freq,Decomposition,12.25,13.25,4
+DaLiA,A,Drift_Harmonic,freq,Linear and MLP,7.25,8.0,4
+DaLiA,A,Drift_Harmonic,freq,Probabilistic,10.0,5.0,1
+DaLiA,A,Drift_Harmonic,freq,Floor,1.0,6.0,1
+AFDB,A,Single_Phase_Modulation,mae,Local receptive field,5.4,3.2,5
+AFDB,A,Single_Phase_Modulation,mae,Global attention,12.0,15.0,1
+AFDB,A,Single_Phase_Modulation,mae,Decomposition,13.0,11.0,4
+AFDB,A,Single_Phase_Modulation,mae,Linear and MLP,9.5,8.25,4
+AFDB,A,Single_Phase_Modulation,mae,Probabilistic,6.0,12.0,1
+AFDB,A,Single_Phase_Modulation,mae,Floor,1.0,16.0,1
+AFDB,A,Single_Phase_Modulation,phase,Local receptive field,5.0,4.4,5
+AFDB,A,Single_Phase_Modulation,phase,Global attention,12.0,10.0,1
+AFDB,A,Single_Phase_Modulation,phase,Decomposition,13.0,12.25,4
+AFDB,A,Single_Phase_Modulation,phase,Linear and MLP,9.75,9.75,4
+AFDB,A,Single_Phase_Modulation,phase,Probabilistic,6.0,15.0,1
+AFDB,A,Single_Phase_Modulation,phase,Floor,2.0,1.0,1
+AFDB,A,Single_Phase_Modulation,freq,Local receptive field,4.2,4.0,5
+AFDB,A,Single_Phase_Modulation,freq,Global attention,11.0,11.0,1
+AFDB,A,Single_Phase_Modulation,freq,Decomposition,13.25,12.0,4
+AFDB,A,Single_Phase_Modulation,freq,Linear and MLP,9.75,10.0,4
+AFDB,A,Single_Phase_Modulation,freq,Probabilistic,8.0,16.0,1
+AFDB,A,Single_Phase_Modulation,freq,Floor,4.0,1.0,1
+AFDB,A,Dual_Phase_Modulation,mae,Local receptive field,5.8,3.2,5
+AFDB,A,Dual_Phase_Modulation,mae,Global attention,13.0,15.0,1
+AFDB,A,Dual_Phase_Modulation,mae,Decomposition,9.5,11.0,4
+AFDB,A,Dual_Phase_Modulation,mae,Linear and MLP,7.25,8.25,4
+AFDB,A,Dual_Phase_Modulation,mae,Probabilistic,11.0,12.0,1
+AFDB,A,Dual_Phase_Modulation,mae,Floor,16.0,16.0,1
+AFDB,A,Dual_Phase_Modulation,phase,Local receptive field,5.0,4.4,5
+AFDB,A,Dual_Phase_Modulation,phase,Global attention,14.0,10.0,1
+AFDB,A,Dual_Phase_Modulation,phase,Decomposition,9.5,12.25,4
+AFDB,A,Dual_Phase_Modulation,phase,Linear and MLP,7.75,9.75,4
+AFDB,A,Dual_Phase_Modulation,phase,Probabilistic,13.0,15.0,1
+AFDB,A,Dual_Phase_Modulation,phase,Floor,15.0,1.0,1
+AFDB,A,Dual_Phase_Modulation,freq,Local receptive field,9.8,4.0,5
+AFDB,A,Dual_Phase_Modulation,freq,Global attention,12.0,11.0,1
+AFDB,A,Dual_Phase_Modulation,freq,Decomposition,7.5,12.0,4
+AFDB,A,Dual_Phase_Modulation,freq,Linear and MLP,5.5,10.0,4
+AFDB,A,Dual_Phase_Modulation,freq,Probabilistic,8.0,16.0,1
+AFDB,A,Dual_Phase_Modulation,freq,Floor,15.0,1.0,1
+NSRDB,A,Single_Phase_Modulation,mae,Local receptive field,5.4,4.4,5
+NSRDB,A,Single_Phase_Modulation,mae,Global attention,12.0,14.0,1
+NSRDB,A,Single_Phase_Modulation,mae,Decomposition,13.0,10.75,4
+NSRDB,A,Single_Phase_Modulation,mae,Linear and MLP,9.5,7.75,4
+NSRDB,A,Single_Phase_Modulation,mae,Probabilistic,6.0,10.0,1
+NSRDB,A,Single_Phase_Modulation,mae,Floor,1.0,16.0,1
+NSRDB,A,Single_Phase_Modulation,phase,Local receptive field,5.0,5.0,5
+NSRDB,A,Single_Phase_Modulation,phase,Global attention,12.0,14.0,1
+NSRDB,A,Single_Phase_Modulation,phase,Decomposition,13.0,11.25,4
+NSRDB,A,Single_Phase_Modulation,phase,Linear and MLP,9.75,9.0,4
+NSRDB,A,Single_Phase_Modulation,phase,Probabilistic,6.0,15.0,1
+NSRDB,A,Single_Phase_Modulation,phase,Floor,2.0,1.0,1
+NSRDB,A,Single_Phase_Modulation,freq,Local receptive field,4.2,6.4,5
+NSRDB,A,Single_Phase_Modulation,freq,Global attention,11.0,14.0,1
+NSRDB,A,Single_Phase_Modulation,freq,Decomposition,13.25,12.25,4
+NSRDB,A,Single_Phase_Modulation,freq,Linear and MLP,9.75,5.75,4
+NSRDB,A,Single_Phase_Modulation,freq,Probabilistic,8.0,16.0,1
+NSRDB,A,Single_Phase_Modulation,freq,Floor,4.0,2.0,1
+NSRDB,A,Dual_Phase_Modulation,mae,Local receptive field,5.8,4.4,5
+NSRDB,A,Dual_Phase_Modulation,mae,Global attention,13.0,14.0,1
+NSRDB,A,Dual_Phase_Modulation,mae,Decomposition,9.5,10.75,4
+NSRDB,A,Dual_Phase_Modulation,mae,Linear and MLP,7.25,7.75,4
+NSRDB,A,Dual_Phase_Modulation,mae,Probabilistic,11.0,10.0,1
+NSRDB,A,Dual_Phase_Modulation,mae,Floor,16.0,16.0,1
+NSRDB,A,Dual_Phase_Modulation,phase,Local receptive field,5.0,5.0,5
+NSRDB,A,Dual_Phase_Modulation,phase,Global attention,14.0,14.0,1
+NSRDB,A,Dual_Phase_Modulation,phase,Decomposition,9.5,11.25,4
+NSRDB,A,Dual_Phase_Modulation,phase,Linear and MLP,7.75,9.0,4
+NSRDB,A,Dual_Phase_Modulation,phase,Probabilistic,13.0,15.0,1
+NSRDB,A,Dual_Phase_Modulation,phase,Floor,15.0,1.0,1
+NSRDB,A,Dual_Phase_Modulation,freq,Local receptive field,9.8,6.4,5
+NSRDB,A,Dual_Phase_Modulation,freq,Global attention,12.0,14.0,1
+NSRDB,A,Dual_Phase_Modulation,freq,Decomposition,7.5,12.25,4
+NSRDB,A,Dual_Phase_Modulation,freq,Linear and MLP,5.5,5.75,4
+NSRDB,A,Dual_Phase_Modulation,freq,Probabilistic,8.0,16.0,1
+NSRDB,A,Dual_Phase_Modulation,freq,Floor,15.0,2.0,1
+SleepEDF,A,Dual_Phase_Modulation,mae,Local receptive field,5.8,8.2,5
+SleepEDF,A,Dual_Phase_Modulation,mae,Global attention,13.0,7.0,1
+SleepEDF,A,Dual_Phase_Modulation,mae,Decomposition,9.5,9.25,4
+SleepEDF,A,Dual_Phase_Modulation,mae,Linear and MLP,7.25,6.5,4
+SleepEDF,A,Dual_Phase_Modulation,mae,Probabilistic,11.0,9.0,1
+SleepEDF,A,Dual_Phase_Modulation,mae,Floor,16.0,16.0,1
+SleepEDF,A,Dual_Phase_Modulation,phase,Local receptive field,5.0,8.2,5
+SleepEDF,A,Dual_Phase_Modulation,phase,Global attention,14.0,8.0,1
+SleepEDF,A,Dual_Phase_Modulation,phase,Decomposition,9.5,8.75,4
+SleepEDF,A,Dual_Phase_Modulation,phase,Linear and MLP,7.75,6.75,4
+SleepEDF,A,Dual_Phase_Modulation,phase,Probabilistic,13.0,9.0,1
+SleepEDF,A,Dual_Phase_Modulation,phase,Floor,15.0,16.0,1
+SleepEDF,A,Dual_Phase_Modulation,freq,Local receptive field,9.8,7.6,5
+SleepEDF,A,Dual_Phase_Modulation,freq,Global attention,12.0,6.0,1
+SleepEDF,A,Dual_Phase_Modulation,freq,Decomposition,7.5,9.25,4
+SleepEDF,A,Dual_Phase_Modulation,freq,Linear and MLP,5.5,9.25,4
+SleepEDF,A,Dual_Phase_Modulation,freq,Probabilistic,8.0,2.0,1
+SleepEDF,A,Dual_Phase_Modulation,freq,Floor,15.0,16.0,1
+BIDMC,B,Drift_Harmonic,mae,Local receptive field,6.5,4.25,4
+BIDMC,B,Drift_Harmonic,mae,Global attention,7.0,5.0,1
+BIDMC,B,Drift_Harmonic,mae,Decomposition,10.0,11.5,4
+BIDMC,B,Drift_Harmonic,mae,Linear and MLP,6.0,9.0,4
+BIDMC,B,Drift_Harmonic,mae,Floor,8.0,1.0,1
+BIDMC,B,Drift_Harmonic,phase,Local receptive field,4.5,4.25,4
+BIDMC,B,Drift_Harmonic,phase,Global attention,9.0,6.0,1
+BIDMC,B,Drift_Harmonic,phase,Decomposition,10.0,11.5,4
+BIDMC,B,Drift_Harmonic,phase,Linear and MLP,7.0,8.75,4
+BIDMC,B,Drift_Harmonic,phase,Floor,10.0,1.0,1
+BIDMC,B,Drift_Harmonic,freq,Local receptive field,5.0,3.75,4
+BIDMC,B,Drift_Harmonic,freq,Global attention,10.0,10.0,1
+BIDMC,B,Drift_Harmonic,freq,Decomposition,11.5,11.0,4
+BIDMC,B,Drift_Harmonic,freq,Linear and MLP,7.0,8.0,4
+BIDMC,B,Drift_Harmonic,freq,Floor,1.0,4.0,1
+DaLiA,B,Drift_Harmonic,mae,Local receptive field,6.5,7.0,4
+DaLiA,B,Drift_Harmonic,mae,Global attention,7.0,2.0,1
+DaLiA,B,Drift_Harmonic,mae,Decomposition,10.0,9.75,4
+DaLiA,B,Drift_Harmonic,mae,Linear and MLP,6.0,5.5,4
+DaLiA,B,Drift_Harmonic,mae,Floor,8.0,14.0,1
+DaLiA,B,Drift_Harmonic,phase,Local receptive field,4.5,7.0,4
+DaLiA,B,Drift_Harmonic,phase,Global attention,9.0,6.0,1
+DaLiA,B,Drift_Harmonic,phase,Decomposition,10.0,11.75,4
+DaLiA,B,Drift_Harmonic,phase,Linear and MLP,7.0,5.75,4
+DaLiA,B,Drift_Harmonic,phase,Floor,10.0,1.0,1
+DaLiA,B,Drift_Harmonic,freq,Local receptive field,5.0,4.5,4
+DaLiA,B,Drift_Harmonic,freq,Global attention,10.0,9.0,1
+DaLiA,B,Drift_Harmonic,freq,Decomposition,11.5,12.5,4
+DaLiA,B,Drift_Harmonic,freq,Linear and MLP,7.0,6.0,4
+DaLiA,B,Drift_Harmonic,freq,Floor,1.0,4.0,1
+AFDB,B,Single_Phase_Modulation,mae,Local receptive field,5.0,10.4,5
+AFDB,B,Single_Phase_Modulation,mae,Global attention,11.0,2.0,1
+AFDB,B,Single_Phase_Modulation,mae,Decomposition,12.0,5.0,4
+AFDB,B,Single_Phase_Modulation,mae,Linear and MLP,8.75,7.75,4
+AFDB,B,Single_Phase_Modulation,mae,Floor,1.0,15.0,1
+AFDB,B,Single_Phase_Modulation,phase,Local receptive field,4.6,4.2,5
+AFDB,B,Single_Phase_Modulation,phase,Global attention,11.0,12.0,1
+AFDB,B,Single_Phase_Modulation,phase,Decomposition,12.0,13.0,4
+AFDB,B,Single_Phase_Modulation,phase,Linear and MLP,9.0,7.0,4
+AFDB,B,Single_Phase_Modulation,phase,Floor,2.0,7.0,1
+AFDB,B,Single_Phase_Modulation,freq,Local receptive field,4.0,7.0,5
+AFDB,B,Single_Phase_Modulation,freq,Global attention,10.0,15.0,1
+AFDB,B,Single_Phase_Modulation,freq,Decomposition,12.25,7.5,4
+AFDB,B,Single_Phase_Modulation,freq,Linear and MLP,9.25,9.25,4
+AFDB,B,Single_Phase_Modulation,freq,Floor,4.0,3.0,1
+AFDB,B,Dual_Phase_Modulation,mae,Local receptive field,5.6,10.4,5
+AFDB,B,Dual_Phase_Modulation,mae,Global attention,12.0,2.0,1
+AFDB,B,Dual_Phase_Modulation,mae,Decomposition,9.25,5.0,4
+AFDB,B,Dual_Phase_Modulation,mae,Linear and MLP,7.0,7.75,4
+AFDB,B,Dual_Phase_Modulation,mae,Floor,15.0,15.0,1
+AFDB,B,Dual_Phase_Modulation,phase,Local receptive field,5.0,4.2,5
+AFDB,B,Dual_Phase_Modulation,phase,Global attention,13.0,12.0,1
+AFDB,B,Dual_Phase_Modulation,phase,Decomposition,9.25,13.0,4
+AFDB,B,Dual_Phase_Modulation,phase,Linear and MLP,7.75,7.0,4
+AFDB,B,Dual_Phase_Modulation,phase,Floor,14.0,7.0,1
+AFDB,B,Dual_Phase_Modulation,freq,Local receptive field,9.2,7.0,5
+AFDB,B,Dual_Phase_Modulation,freq,Global attention,11.0,15.0,1
+AFDB,B,Dual_Phase_Modulation,freq,Decomposition,7.0,7.5,4
+AFDB,B,Dual_Phase_Modulation,freq,Linear and MLP,5.25,9.25,4
+AFDB,B,Dual_Phase_Modulation,freq,Floor,14.0,3.0,1
+NSRDB,B,Single_Phase_Modulation,mae,Local receptive field,5.0,7.8,5
+NSRDB,B,Single_Phase_Modulation,mae,Global attention,11.0,2.0,1
+NSRDB,B,Single_Phase_Modulation,mae,Decomposition,12.0,8.5,4
+NSRDB,B,Single_Phase_Modulation,mae,Linear and MLP,8.75,7.5,4
+NSRDB,B,Single_Phase_Modulation,mae,Floor,1.0,15.0,1
+NSRDB,B,Single_Phase_Modulation,phase,Local receptive field,4.6,6.6,5
+NSRDB,B,Single_Phase_Modulation,phase,Global attention,11.0,3.0,1
+NSRDB,B,Single_Phase_Modulation,phase,Decomposition,12.0,11.5,4
+NSRDB,B,Single_Phase_Modulation,phase,Linear and MLP,9.0,8.0,4
+NSRDB,B,Single_Phase_Modulation,phase,Floor,2.0,6.0,1
+NSRDB,B,Single_Phase_Modulation,freq,Local receptive field,4.0,5.4,5
+NSRDB,B,Single_Phase_Modulation,freq,Global attention,10.0,10.0,1
+NSRDB,B,Single_Phase_Modulation,freq,Decomposition,12.25,9.0,4
+NSRDB,B,Single_Phase_Modulation,freq,Linear and MLP,9.25,8.5,4
+NSRDB,B,Single_Phase_Modulation,freq,Floor,4.0,13.0,1
+NSRDB,B,Dual_Phase_Modulation,mae,Local receptive field,5.6,7.8,5
+NSRDB,B,Dual_Phase_Modulation,mae,Global attention,12.0,2.0,1
+NSRDB,B,Dual_Phase_Modulation,mae,Decomposition,9.25,8.5,4
+NSRDB,B,Dual_Phase_Modulation,mae,Linear and MLP,7.0,7.5,4
+NSRDB,B,Dual_Phase_Modulation,mae,Floor,15.0,15.0,1
+NSRDB,B,Dual_Phase_Modulation,phase,Local receptive field,5.0,6.6,5
+NSRDB,B,Dual_Phase_Modulation,phase,Global attention,13.0,3.0,1
+NSRDB,B,Dual_Phase_Modulation,phase,Decomposition,9.25,11.5,4
+NSRDB,B,Dual_Phase_Modulation,phase,Linear and MLP,7.75,8.0,4
+NSRDB,B,Dual_Phase_Modulation,phase,Floor,14.0,6.0,1
+NSRDB,B,Dual_Phase_Modulation,freq,Local receptive field,9.2,5.4,5
+NSRDB,B,Dual_Phase_Modulation,freq,Global attention,11.0,10.0,1
+NSRDB,B,Dual_Phase_Modulation,freq,Decomposition,7.0,9.0,4
+NSRDB,B,Dual_Phase_Modulation,freq,Linear and MLP,5.25,8.5,4
+NSRDB,B,Dual_Phase_Modulation,freq,Floor,14.0,13.0,1

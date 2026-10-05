@@ -2,9 +2,34 @@
 
 Written for: Rakib, as input to the Results section and the response letter.
 
-Complete: 420 runs (Track A 16 models x 5 datasets x 3 seeds, Track B 15 models x 4 datasets x 3
-seeds). Units are test subjects: BIDMC 11, NSRDB 6, Sleep-EDF 7, AFDB 4, DaLiA 3. Outstanding:
-the synthetic-to-real ranking transfer (P1.6 item 1), which needs `p2a_synthetic_train`.
+Complete: 420 real runs (Track A 16 models x 5 datasets x 3 seeds, Track B 15 models x 4 datasets
+x 3 seeds) and the synthetic clean paradigm (230 of 240 runs; 10 TimesNet jobs timed out). Units
+are test subjects: BIDMC 11, NSRDB 6, Sleep-EDF 7, AFDB 4, DaLiA 3.
+
+## 0. The headline result: fidelity rankings transfer to real data, MAE rankings do not
+
+Kendall tau between the model ranking on the matched synthetic family and on the real dataset,
+13 comparisons across five datasets and both tracks:
+
+| ranking metric | mean tau | negative transfers |
+|---|---|---|
+| MAE | **0.07** | 4 of 13 |
+| phase error | **0.28** | 1 of 13 |
+| frequency error | 0.20 | 2 of 13 |
+
+Ranking the synthetic benchmark by MAE carries almost no information about which model will do
+well on real signals: the mean rank correlation is 0.07, and on ECG morphology (Track B) it is
+clearly negative, -0.58 on AFDB against SPM and -0.47 against DPM, meaning the models that win on
+the synthetic benchmark are among the worst on real ECG. Ranking the same benchmark by phase
+fidelity transfers four times better and is negative only once. Phase beats MAE in 10 of the 13
+comparisons.
+
+This is the quantitative justification for the whole framework and the direct answer to R4.5: a
+synthetic benchmark is predictive of real-data performance only if it is scored on temporal
+fidelity, not on pointwise error. It also sets the limits honestly, since a mean tau of 0.28 is a
+moderate correlation, not a strong one.
+
+Per-comparison values are in `ranking_transfer.csv`.
 
 ## 1. The headline: a trivial baseline is worst by MAE and best by phase
 
