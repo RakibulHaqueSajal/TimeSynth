@@ -23,7 +23,7 @@ the scripts. Rakib: please diff the YAMLs against the manuscript tables.
 | PatchTST, Transformer, Autoformer | `patience` | 30 (majority), 80 (early blocks) | 30 | |
 | PatchTST, Transformer, Autoformer | `train_epochs` | 300; a few `2` | 300 | the `2` blocks are debugging runs |
 | ModernTCN | `dropout` | passed twice in the same command (0.4 then 0.2) | 0.2 | argparse keeps the last occurrence |
-| MICN | `label_len` | 50 in scripts | 50 (kept) | `Dataset_Custom` forces `label_len = 0` for every split, so the value is inert |
+| MICN | `label_len` | 50 in scripts | **0** | CORRECTED 2026-10-05: the value is NOT inert. `Dataset_Custom` zeroes its own copy, so `batch_y` is purely the future, but the trainer still builds `dec_inp = cat([batch_y[:, :args.label_len, :], pad])`. With 50 the paper fed MICN the first 50 ground-truth future samples. See `analysis/p2_baselines/ACCEPTANCE_FAILURE.md` |
 | DLinear | `train_epochs` | 300 (12 training), 200 (10 test-only) | 300 | |
 
 ## Things the scripts do that the paper text may not say
