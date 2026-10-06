@@ -94,10 +94,27 @@ def chain_metrics(true_states, pred_states):
                 dwell_pred=float(F.mean_dwell_from_matrix(Q, fs_win).mean()))
 
 
-def frac_between(Y):
-    Zs = domfreq_windows(Y)
-    z = np.concatenate(Zs)[:, 0]
-    return float(np.mean((z > F0_HI) & (z < F1_LO)))
+def frac_between(Y, win=32, hop=8):
+    """
+    P4.4 regression-to-the-mean: fraction of forecast time whose local dominant frequency lies
+    strictly between the two state bands.
+
+    The HMM probe's 16-sample Welch windows give a frequency resolution of fs/win = 0.625 Hz, so
+    the estimate can only land on a bin and never inside the 0.861 to 1.081 Hz gap; the metric was
+    identically zero for every model, truth included. This uses a longer window and the parabolic
+    peak interpolation of utils.fidelity.peak_freq_batch, whose resolution is continuous.
+    """
+    segs = []
+    for y in Y:
+        for a in range(0, y.size - win + 1, hop):
+            segs.append(y[a:a + win])
+    if not segs:
+        return float("nan")
+    f, ok = F.peak_freq_batch(np.stack(segs), fs=FS, peak_frac_thresh=0.05)
+    f = f[ok]
+    if f.size == 0:
+        return float("nan")
+    return float(np.mean((f > F0_HI) & (f < F1_LO)))
 
 
 def main():
