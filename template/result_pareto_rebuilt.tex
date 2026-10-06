@@ -1,0 +1,86 @@
+% ---------------------------------------------------------------------------------------------
+% Rebuilt replacement for the subsection currently titled
+%   "Localized temporal processing achieves the most balanced fidelity across paradigms"
+% (template/result.tex, line 151 onward).
+%
+% Why it needed rebuilding, in short:
+%   1. The subsection's central quantitative claim, that PatchTST scores $1.00$ on the Markov
+%      dimension, is reversed by the redesigned paradigm. PatchTST now ranks last of fifteen
+%      models on switching fidelity at two of the three dwell times.
+%   2. MICN's frontier status was inflated by decoder-input leakage in the published runs.
+%   3. PatchTST is architecturally hybrid, so it is weak evidence for a claim about localized
+%      processing specifically.
+%   4. The real-data results give a direct test of the claim, which the original text predates.
+%
+% Numbers below are traceable to analysis/p4_markov/markov_metrics.csv,
+% analysis/p1_real/supp_table_real.csv and analysis/p2_baselines/ACCEPTANCE_FAILURE.md.
+%
+% PENDING: the Pareto frontier itself cannot be regenerated until the noise and shift sweeps are
+% re-run with the full sixteen-model roster. Paragraph 3 is written so that it states only what
+% the completed paradigms support; the bracketed sentence is the single place where the
+% regenerated frontier numbers must be inserted.
+% ---------------------------------------------------------------------------------------------
+
+\subsection*{No architecture maintains fidelity across all paradigms, and the advantage of localized processing is paradigm-dependent}
+
+The preceding analyses each isolate a single perturbation dimension. In practice, a forecasting
+model deployed for patient monitoring faces noise, frequency shifts, and state changes
+simultaneously, and fidelity varies not only across individual dynamical properties but also
+across their interactions under combined perturbation \cite{clifford2006advanced,
+sornmo2005bioelectrical}. Strong performance on any single paradigm does not guarantee overall
+suitability. We therefore ask whether any architecture maintains fidelity across all five
+paradigms, and whether the localized-processing hypothesis survives that test.
+
+It does not survive in the form we previously stated. Under the redesigned switching paradigm,
+in which the expected dwell time is controlled explicitly rather than the per-sample transition
+probability, PatchTST ranks last of the fifteen models on switching fidelity at expected dwell
+times of $2$ s and $5$ s, and thirteenth at $10$ s. Its predicted mean dwell time is $29.6$ s
+against a true $3.1$ s at $D = 2$ s, and $292.8$ s against a true $11.2$ s at $D = 10$ s: its
+forecasts almost never change state. The seasonal-naive floor, which performs no learning,
+attains the lowest transition-matrix divergence of any model at $D = 10$ s
+($0.004$ nats per step, against $0.108$ for PatchTST). Our earlier conclusion that PatchTST
+recovers switching dynamics was an artifact of the previous parameterization, in which the chain
+switched with probability $p$ at every sample and the mean dwell time was shorter than one
+carrier cycle, so that the decoded state sequence carried little information about switching.
+
+The ordering by pointwise error and the ordering by switching fidelity are close to opposite.
+The models with the lowest mean absolute error on this paradigm, MICN (mean), MICN (regre) and
+TSMixer, occupy ranks eight to eleven of fifteen on divergence, while the models that reproduce
+the switching statistics best, the linear family and the naive floor, rank ninth to fifteenth on
+error. A deterministic predictor minimizes expected pointwise error on a stochastic switching
+task by declining to commit to a state, which produces a smooth forecast with few transitions,
+and only a metric defined on the switching process makes that visible.
+[Insert the regenerated Pareto frontier here once the noise and shift sweeps have been re-run
+with the full sixteen-model roster; the frontier reported previously rests on MICN scores that
+were inflated by decoder-input leakage, as described in Methods.]
+
+The real-data experiments provide a direct test of the localized-processing hypothesis that the
+synthetic paradigms alone cannot give. Among trained models the ordering by fidelity does favor
+local receptive fields on photoplethysmography and electrocardiography, where ModernTCN, the two
+MICN variants and PatchTST lead. It does not hold on electroencephalography: on Sleep-EDF the
+decomposition and linear families lead, and the separation between the best local model and the
+best linear model is $0.004$ in normalized mean absolute error, which is within the spread across
+seeds. The hypothesis is therefore conditional on the signal having a dominant local period, not
+general.
+
+Two further observations constrain the claim. First, PatchTST is architecturally hybrid: its
+input stage is local, since the series is cut into patches that are projected independently, but
+its predictive stage applies full self-attention across all patches. Evidence drawn from PatchTST
+alone cannot separate the contribution of local tokenization from that of global mixing, and we
+report the bias-group analysis with PatchTST assigned to each group in turn in the Supplement.
+Second, on clean photoplethysmography a seasonal-naive forecaster that repeats the last dominant
+period outperforms all fifteen trained architectures on every metric we computed, including mean
+absolute error ($0.518$ against $0.660$ for the best trained model), phase error
+($33.8^{\circ}$ against $56.1^{\circ}$) and heart-rate error ($4.3$ against $4.8$ beats per
+minute). Any claim that a particular inductive bias confers fidelity on real periodic signals
+must first account for the fact that periodic extrapolation from a five-second history is not
+beaten by any of them.
+
+Taken together, these results do not support a recommendation of localized temporal processing as
+a general design principle for physiological forecasting. They support three narrower statements.
+Local receptive fields confer an advantage where the signal has a dominant local period, and that
+advantage disappears on electroencephalography. No architecture in this benchmark, local or
+otherwise, reproduces stochastic switching statistics, and the architectures that score best by
+pointwise error are among the worst on this dimension. And on the clean periodic signals where
+the locality advantage is clearest, none of the trained architectures improves on a
+parameter-free periodic baseline, which sets the floor any future architectural claim must clear.
