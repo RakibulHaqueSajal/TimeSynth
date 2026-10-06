@@ -122,7 +122,7 @@ the best result on five of the eight dataset and track combinations.
 
 1. The clearest demonstration that the metric determines the ranking is now the set of negative
    rank correlations on ECG morphology: choosing by mean absolute error selects against
-   inter-beat-interval accuracy (-0.69), beat detection (-0.65) and band power (-0.63).
+   inter-beat-interval accuracy (-0.69) and band power (-0.63) on AF recordings, and beat detection (-0.65) on PPG.
 2. The claim to defend is not "MAE and fidelity always disagree" but "MAE selects low-amplitude,
    temporally uninformative forecasts, and how much that matters depends on the metric and the
    modality". The tau table above gives the conditions.

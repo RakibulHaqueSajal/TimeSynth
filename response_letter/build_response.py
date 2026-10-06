@@ -394,11 +394,13 @@ para("On real ECG morphology the transfer of the pointwise ranking is clearly ne
      "predictive of real performance only if it is scored on temporal fidelity. We report the "
      "moderate size of the positive correlation honestly: 0.33 is a useful signal, not a strong one.")
 para("Two further results speak directly to the charge that our findings are unsurprising. First, "
-     "on real electrocardiographic morphology the agreement between the pointwise ranking and the "
-     "fidelity rankings is not merely weak but negative across four independent measures: minus 0.69 "
-     "for inter-beat-interval accuracy, minus 0.65 for beat detection, minus 0.63 for band power and "
-     "minus 0.56 for peak amplitude. Choosing the model with the lowest mean absolute error on these "
-     "recordings actively selects against morphological fidelity. Second, on the redesigned switching "
+     "on the morphology track the agreement between the pointwise ranking and several fidelity "
+     "rankings is not merely weak but negative, with bootstrap intervals that exclude zero: on "
+     "atrial-fibrillation recordings, minus 0.69 for inter-beat-interval accuracy, minus 0.63 for "
+     "band power and minus 0.41 for dominant frequency; on normal-sinus-rhythm recordings, minus 0.34 "
+     "for band power; and on photoplethysmography, minus 0.65 for beat detection. Choosing the model "
+     "with the lowest mean absolute error on these recordings selects against those aspects of "
+     "fidelity. Second, on the redesigned switching "
      "paradigm the best models by pointwise error are among the worst at reproducing the switching "
      "statistics, predicting dwell times three to twenty-six times longer than the truth. Neither "
      "result is predicted by the claim that local models win on locally periodic signals.")
