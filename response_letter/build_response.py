@@ -139,19 +139,56 @@ comment("R1.1 / R2.1", "Omission of TimesNet and TSMixer",
         "our largest training sets, about 95 minutes per epoch, and a small number of its "
         "configurations did not complete within the cluster wall clock; these are listed as "
         "missing rather than imputed.")
+table([["model added", "why it is in the roster", "status"],
+       ["TimesNet (Wu et al., ICLR 2023)", "second route to locality via 2D convolution over inferred periods",
+        "implemented previously, now evaluated"],
+       ["TSMixer (Chen et al., TMLR 2023)", "all-MLP time and feature mixing with reversible instance normalisation",
+        "newly implemented for this revision"],
+       ["CSDI (Tashiro et al., NeurIPS 2021)", "probabilistic baseline, answers R4.7", "newly implemented"],
+       ["Seasonal-naive floor", "periodic extrapolation with no learning, gives every figure a reference",
+        "newly implemented"]],
+      [1.95, 2.85, 1.6])
 
 comment("R1.2 / R2.2", "PatchTST grouped with Transformers",
         "The text attributes PatchTST's success to a localized bias, yet figures group it with "
         "Autoformer as a Transformer, conflating architecture family with inductive bias.",
-        "The reviewers are right, and the inconsistency came from figures and text being "
-        "maintained separately. We now group models by the operation that defines their inductive "
-        "bias rather than by architectural lineage, and a single machine-readable file is the only "
-        "source of group membership and colour for every figure and table, so text and figures "
-        "cannot disagree again. PatchTST and TimesNet sit with the convolutional models under "
-        "local receptive field; Autoformer joins DLinear, FITS and FreMLP under decomposition, "
-        "since an explicit trend, seasonal or spectral split is what defines them.",
-        "<font face='Courier'>configs/bias_groups.yaml</font> added; all plotting and statistics "
-        "scripts read membership and colours from it. Figures regenerated.")
+        "The reviewers have identified a real inconsistency between our text and our figures, and "
+        "we have fixed it. We do not, however, think the original grouping was arbitrary, and the "
+        "revision states the reasoning rather than silently relabelling the model. PatchTST is "
+        "architecturally hybrid. Its input stage is local: the series is cut into patches of 15 "
+        "samples with a stride of 10, and each patch is projected independently by a linear map "
+        "over the patch, which is equivalent to a strided convolution and gives the model a finite "
+        "receptive field at the token level. Its predictive stage is not local: a stack of "
+        "transformer encoder layers applies full self-attention across all patches, so every patch "
+        "is mixed with every other before the forecasting head. We grouped it with the transformer "
+        "models because that is the mechanism that produces the forecast; the reviewers emphasise "
+        "the tokenisation instead. Both readings are defensible, which is precisely the problem "
+        "with a taxonomy that assigns one label per model. Our resolution is threefold. First, we "
+        "define the grouping rule explicitly, by the operation that determines how information is "
+        "combined across time, and we apply it uniformly. Second, we declare PatchTST a hybrid in "
+        "the text and in the figure legend, rather than letting a colour imply a claim. Third, we "
+        "test the question empirically instead of arguing it: we correlate each model's per-signal "
+        "error profile with the mean profile of each group, excluding the model itself.",
+        "On the synthetic paradigms, where 20 test signals per family give the comparison enough "
+        "units to be meaningful, PatchTST's per-signal error profile tracks the local group more "
+        "closely than the attention group, by Spearman correlation:")
+table([["signal family", "metric", "vs local receptive field", "vs global attention", "vs linear and MLP"],
+       ["Dual phase modulation", "phase", "0.61", "-0.08", "-0.11"],
+       ["Single phase modulation", "phase", "0.18", "-0.26", "-0.45"],
+       ["Drift harmonic", "phase", "-0.26", "-0.07", "-0.21"],
+       ["mean of the three", "MAE", "0.48", "0.10", "-0.02"]],
+      [1.7, 0.75, 1.65, 1.45, 1.45])
+para("The association with the local group is positive but not uniform, which is what one expects "
+     "of a hybrid model: PatchTST behaves like the convolutional models on the two phase-modulated "
+     "families and like neither group on drift-harmonic signals. We therefore report it as a "
+     "hybrid and, in the Supplement, repeat the bias-group analysis with PatchTST assigned to each "
+     "group in turn. None of the conclusions in the paper change under either assignment, which we "
+     "state explicitly so that the taxonomy carries no hidden weight. We thank the reviewers for "
+     "forcing this check; the original figures did assert a grouping the text contradicted.")
+para("One clarification on scope. The same question arises for DLinear, FITS and FreMLP, which are "
+     "linear or MLP maps that also perform an explicit decomposition or spectral transform. We "
+     "apply the same rule and group them by the decomposition, since that is what determines how "
+     "information is combined across time, and we note the alternative in the Supplement.")
 
 comment("R1.3 / R2.3", "Oversimplified physiological signals",
         "Gaussian EEG spikes and ECG without R-peaks strip out the sharp, non-stationary "
@@ -394,6 +431,25 @@ comment("R4.5", "No validation on real data",
         "420 trained models across 5 datasets, 3 modalities, 2 tracks and 3 seeds, with per-subject "
         "metrics, the ranking-transfer analysis, the natural-event analysis and the heart-rate "
         "proxy reported in a new Results section and a supplementary table.")
+table([["dataset", "modality", "subjects (train/val/test)", "natural events available"],
+       ["BIDMC PPG and Respiration", "PPG", "37 / 5 / 11", "none"],
+       ["PPG-DaLiA", "PPG (ambulatory)", "10 / 2 / 3", "activity transitions"],
+       ["MIT-BIH Normal Sinus Rhythm", "ECG", "9 / 3 / 6", "none"],
+       ["MIT-BIH Atrial Fibrillation", "ECG", "15 / 2 / 4", "AF onsets"],
+       ["Sleep-EDF Expanded (Fpz-Cz)", "EEG", "10 / 3 / 7", "sleep-stage transitions"]],
+      [2.0, 1.25, 1.5, 1.65])
+para("Two preprocessing tracks are used. Track A band-limits each recording to its dominant rhythm "
+     "and resamples so that the 50-sample history spans about five dominant cycles, matching the "
+     "cycles-per-window ratio of the synthetic benchmark; without this the real task would not be "
+     "the same task. Track B preserves morphology at 50 Hz with 250-sample histories and "
+     "500-sample horizons, and is used for ECG and PPG only. Recordings are split by subject and "
+     "never by window; each recording is z-scored using statistics from its own first 20 percent, "
+     "a calibration segment that would be available at deployment, so no information crosses "
+     "subjects. Segments failing an amplitude-based artifact check are removed before windowing. "
+     "Training windows are capped at 35000 per dataset by evenly spaced subsampling, so that "
+     "datasets whose recordings differ in length by two orders of magnitude contribute comparable "
+     "training budgets; without this cap the EEG models received about eighteen times more "
+     "gradient steps per epoch than the ECG models.")
 
 comment("R4.6", "Sample sizes and independence",
         "The number of test signals, window overlap, and training runs should be reported; "
@@ -415,6 +471,25 @@ comment("R4.6", "Sample sizes and independence",
         "window stride, overlap fraction, number of seeds and the test used. Overlap is zero "
         "throughout. A linear mixed model with random effects for unit and seed is reported as a "
         "sensitivity check.")
+table([["paradigm", "units", "windows per unit", "stride", "overlap", "seeds"],
+       ["Clean, drift harmonic", "20 signals", "900", "150", "0", "3"],
+       ["Clean, single phase modulation", "20 signals", "940", "150", "0", "3"],
+       ["Clean, dual phase modulation", "20 signals", "960", "150", "0", "3"],
+       ["Single state transition", "200 signals", "90", "150", "0", "3"],
+       ["Markov switching (per dwell time)", "60 signals", "900", "150", "0", "3"],
+       ["Real, BIDMC PPG", "11 subjects", "1536", "150", "0", "3"],
+       ["Real, MIT-BIH NSR", "6 subjects", "1080", "150", "0", "3"],
+       ["Real, Sleep-EDF", "7 subjects", "6000", "150", "0", "3"]],
+      [2.25, 1.0, 1.15, 0.7, 0.65, 0.55])
+para("Two further points of disclosure. First, the published analysis used a window stride of one "
+     "sample, so adjacent test windows shared 149 of their 150 samples; the counts above replace "
+     "that entirely. Second, the original subject split gave only three test subjects on two "
+     "datasets, and a two-sided Wilcoxon signed-rank test over three units cannot reach a p-value "
+     "below 0.25 at any effect size. We therefore increased the test fraction for the two primary "
+     "datasets, MIT-BIH normal sinus rhythm and Sleep-EDF, to 50/15/35, giving six and seven test "
+     "subjects. PPG-DaLiA and MIT-BIH atrial fibrillation remain secondary datasets and are "
+     "reported with effect sizes and bootstrap intervals but without p-values, which we state "
+     "rather than presenting underpowered tests.")
 
 comment("R4.7", "Markov switching is unsuitable for deterministic forecasters",
         "Point forecasters cannot represent multiple stochastic futures, so their failure is "
@@ -435,6 +510,22 @@ comment("R4.7", "Markov switching is unsuitable for deterministic forecasters",
         "CSDI added to the roster with per-sample switching statistics; Q4 retains the paradigm "
         "with the redesigned dwell-time parameterisation and reports both the deterministic and "
         "the probabilistic outcome.")
+table([["model", "MAE", "phase error (deg)", "KL rate (nats/step)", "predicted dwell (s)"],
+       ["MICN (mean)", "0.051", "45.1", "0.038", "44.7"],
+       ["PatchTST", "0.053", "43.6 (best)", "0.108", "292.8"],
+       ["TSMixer", "0.052", "45.2", "0.067", "93.6"],
+       ["NBeats", "0.052", "46.1", "0.066", "89.9"],
+       ["Transformer", "0.053", "49.2", "0.021", "28.7"],
+       ["Seasonal naive", "0.058", "57.1", "0.004 (best)", "15.8"],
+       ["Linear", "0.061", "62.6", "0.005", "8.2"],
+       ["true futures", "-", "-", "0", "11.2"]],
+      [1.5, 0.8, 1.35, 1.5, 1.4])
+para("The table is for an expected dwell time of 10 seconds. The ordering by pointwise error and "
+     "the ordering by switching fidelity are close to opposite. We note one measurement caveat for "
+     "completeness: the probe decodes windowed features with a hop of 0.8 seconds, so it cannot "
+     "resolve dwell times close to its own hop and reports the true dwell as 11.2 seconds for a "
+     "nominal 10 seconds. Predicted and true values pass through the same probe, so the comparison "
+     "is internally consistent, but the absolute values are biased upward for short dwells.")
 
 story.append(PageBreak())
 para("Provenance of the numbers in this letter", H1)
