@@ -1,7 +1,6 @@
 paradigm,condition,signal,metric,best_model,best_group,reason
 clean,,Drift_Harmonic,mae,NBeats,Linear and MLP,best model is non-local
 clean,,Drift_Harmonic,phase,NBeats,Linear and MLP,best model is non-local
-clean,,Drift_Harmonic,freq,SeasonalNaive,Floor,best model is non-local
 clean,,Drift_Harmonic,crps,MICN_Mean,Local receptive field,local model not significantly better than Linear
 clean,,Drift_Harmonic,crps,MICN_Regre,Local receptive field,local model not significantly better than Linear
 clean,,Drift_Harmonic,crps,ModernTCN,Local receptive field,local model not significantly better than Linear
@@ -25,7 +24,6 @@ clean,,Dual_Phase_Modulation,phase,MICN_Mean,Local receptive field,local model n
 clean,,Dual_Phase_Modulation,phase,MICN_Regre,Local receptive field,local model not significantly better than Linear
 clean,,Dual_Phase_Modulation,phase,ModernTCN,Local receptive field,local model not significantly better than Linear
 clean,,Dual_Phase_Modulation,phase,TimesNet,Local receptive field,local model not significantly better than Linear
-clean,,Single_Phase_Modulation,mae,SeasonalNaive,Floor,best model is non-local
 clean,,Single_Phase_Modulation,crps,MICN_Mean,Local receptive field,local model not significantly better than Linear
 clean,,Single_Phase_Modulation,crps,MICN_Regre,Local receptive field,local model not significantly better than Linear
 clean,,Single_Phase_Modulation,crps,ModernTCN,Local receptive field,local model not significantly better than Linear
@@ -42,12 +40,31 @@ markov_dwell,,Single_Phase_Modulation,crps,ModernTCN,Local receptive field,local
 markov_dwell,,Single_Phase_Modulation,crps,PatchTST,Local receptive field,local model not significantly better than Linear
 markov_dwell,,Single_Phase_Modulation,mae,ModernTCN,Local receptive field,local model not significantly better than Linear
 markov_dwell,,Single_Phase_Modulation,phase,ModernTCN,Local receptive field,local model not significantly better than Linear
-real_ppg_A,,BIDMC,mae,SeasonalNaive,Floor,best model is non-local
-real_ppg_A,,BIDMC,phase,SeasonalNaive,Floor,best model is non-local
-real_ppg_A,,BIDMC,freq,SeasonalNaive,Floor,best model is non-local
+markov_dwell,D10,Single_Phase_Modulation,crps,MICN_Mean,Local receptive field,local model not significantly better than Linear
+markov_dwell,D10,Single_Phase_Modulation,crps,MICN_Regre,Local receptive field,local model not significantly better than Linear
+markov_dwell,D10,Single_Phase_Modulation,crps,ModernTCN,Local receptive field,local model not significantly better than Linear
+markov_dwell,D10,Single_Phase_Modulation,crps,PatchTST,Local receptive field,local model not significantly better than Linear
+markov_dwell,D10,Single_Phase_Modulation,freq,ModernTCN,Local receptive field,local model not significantly better than Linear
+markov_dwell,D10,Single_Phase_Modulation,mae,ModernTCN,Local receptive field,local model not significantly better than Linear
+markov_dwell,D10,Single_Phase_Modulation,phase,ModernTCN,Local receptive field,local model not significantly better than Linear
+markov_dwell,D2,Single_Phase_Modulation,freq,NBeats,Linear and MLP,best model is non-local
+markov_dwell,D2,Single_Phase_Modulation,crps,MICN_Mean,Local receptive field,local model not significantly better than Linear
+markov_dwell,D2,Single_Phase_Modulation,crps,MICN_Regre,Local receptive field,local model not significantly better than Linear
+markov_dwell,D2,Single_Phase_Modulation,crps,ModernTCN,Local receptive field,local model not significantly better than Linear
+markov_dwell,D2,Single_Phase_Modulation,crps,PatchTST,Local receptive field,local model not significantly better than Linear
+markov_dwell,D2,Single_Phase_Modulation,freq,MICN_Mean,Local receptive field,local model not significantly better than Linear
+markov_dwell,D2,Single_Phase_Modulation,freq,MICN_Regre,Local receptive field,local model not significantly better than Linear
+markov_dwell,D2,Single_Phase_Modulation,freq,PatchTST,Local receptive field,local model not significantly better than Linear
+markov_dwell,D2,Single_Phase_Modulation,mae,ModernTCN,Local receptive field,local model not significantly better than Linear
+markov_dwell,D5,Single_Phase_Modulation,freq,FreMLP,Decomposition,best model is non-local
+markov_dwell,D5,Single_Phase_Modulation,crps,MICN_Mean,Local receptive field,local model not significantly better than Linear
+markov_dwell,D5,Single_Phase_Modulation,crps,MICN_Regre,Local receptive field,local model not significantly better than Linear
+markov_dwell,D5,Single_Phase_Modulation,crps,ModernTCN,Local receptive field,local model not significantly better than Linear
+markov_dwell,D5,Single_Phase_Modulation,crps,PatchTST,Local receptive field,local model not significantly better than Linear
+markov_dwell,D5,Single_Phase_Modulation,mae,ModernTCN,Local receptive field,local model not significantly better than Linear
+markov_dwell,D5,Single_Phase_Modulation,phase,ModernTCN,Local receptive field,local model not significantly better than Linear
+real_ppg_A,,BIDMC,mae,NBeats,Linear and MLP,best model is non-local
 real_ppg_A,,BIDMC,peak_timing,Autoformer,Decomposition,best model is non-local
-real_ppg_A,,BIDMC,peak_f1,SeasonalNaive,Floor,best model is non-local
-real_ppg_A,,BIDMC,rr_err,SeasonalNaive,Floor,best model is non-local
 real_ppg_A,,BIDMC,crps,MICN_Mean,Local receptive field,local model not significantly better than Linear
 real_ppg_A,,BIDMC,crps,MICN_Regre,Local receptive field,local model not significantly better than Linear
 real_ppg_A,,BIDMC,crps,ModernTCN,Local receptive field,local model not significantly better than Linear
@@ -71,7 +88,7 @@ real_ppg_A,,BIDMC,rr_err,TimesNet,Local receptive field,local model not signific
 real_ppg_A,,DaLiA,mae,MLinear,Linear and MLP,best model is non-local
 real_ppg_A,,DaLiA,phase,MLinear,Linear and MLP,best model is non-local
 real_ppg_A,,DaLiA,peak_timing,Autoformer,Decomposition,best model is non-local
-real_ppg_A,,DaLiA,peak_f1,SeasonalNaive,Floor,best model is non-local
+real_ppg_A,,DaLiA,peak_f1,CSDI,Probabilistic,best model is non-local
 real_ppg_A,,DaLiA,rr_err,Transformer,Global attention,best model is non-local
 real_ppg_A,,DaLiA,crps,MICN_Mean,Local receptive field,local model not significantly better than Linear
 real_ppg_A,,DaLiA,crps,MICN_Regre,Local receptive field,local model not significantly better than Linear
@@ -108,11 +125,8 @@ real_ppg_A,,DaLiA,rr_err,MICN_Regre,Local receptive field,local model not signif
 real_ppg_A,,DaLiA,rr_err,ModernTCN,Local receptive field,local model not significantly better than Linear
 real_ppg_A,,DaLiA,rr_err,PatchTST,Local receptive field,local model not significantly better than Linear
 real_ppg_A,,DaLiA,rr_err,TimesNet,Local receptive field,local model not significantly better than Linear
-real_ecg_A,,AFDB,phase,SeasonalNaive,Floor,best model is non-local
-real_ecg_A,,AFDB,freq,SeasonalNaive,Floor,best model is non-local
 real_ecg_A,,AFDB,peak_timing,Autoformer,Decomposition,best model is non-local
-real_ecg_A,,AFDB,peak_f1,SeasonalNaive,Floor,best model is non-local
-real_ecg_A,,AFDB,rr_err,SeasonalNaive,Floor,best model is non-local
+real_ecg_A,,AFDB,rr_err,CSDI,Probabilistic,best model is non-local
 real_ecg_A,,AFDB,crps,MICN_Mean,Local receptive field,local model not significantly better than Linear
 real_ecg_A,,AFDB,crps,MICN_Regre,Local receptive field,local model not significantly better than Linear
 real_ecg_A,,AFDB,crps,ModernTCN,Local receptive field,local model not significantly better than Linear
@@ -148,10 +162,8 @@ real_ecg_A,,AFDB,rr_err,MICN_Regre,Local receptive field,local model not signifi
 real_ecg_A,,AFDB,rr_err,ModernTCN,Local receptive field,local model not significantly better than Linear
 real_ecg_A,,AFDB,rr_err,PatchTST,Local receptive field,local model not significantly better than Linear
 real_ecg_A,,AFDB,rr_err,TimesNet,Local receptive field,local model not significantly better than Linear
-real_ecg_A,,NSRDB,phase,SeasonalNaive,Floor,best model is non-local
 real_ecg_A,,NSRDB,peak_timing,Autoformer,Decomposition,best model is non-local
-real_ecg_A,,NSRDB,peak_f1,SeasonalNaive,Floor,best model is non-local
-real_ecg_A,,NSRDB,rr_err,SeasonalNaive,Floor,best model is non-local
+real_ecg_A,,NSRDB,rr_err,TSMixer,Linear and MLP,best model is non-local
 real_ecg_A,,NSRDB,crps,MICN_Mean,Local receptive field,local model not significantly better than Linear
 real_ecg_A,,NSRDB,crps,MICN_Regre,Local receptive field,local model not significantly better than Linear
 real_ecg_A,,NSRDB,crps,ModernTCN,Local receptive field,local model not significantly better than Linear
@@ -208,11 +220,7 @@ real_eeg_A,,SleepEDF,phase,MICN_Regre,Local receptive field,local model not sign
 real_eeg_A,,SleepEDF,phase,ModernTCN,Local receptive field,local model not significantly better than Linear
 real_eeg_A,,SleepEDF,phase,PatchTST,Local receptive field,local model not significantly better than Linear
 real_eeg_A,,SleepEDF,phase,TimesNet,Local receptive field,local model not significantly better than Linear
-real_ppg_B,,BIDMC,mae,SeasonalNaive,Floor,best model is non-local
-real_ppg_B,,BIDMC,phase,SeasonalNaive,Floor,best model is non-local
-real_ppg_B,,BIDMC,peak_timing,SeasonalNaive,Floor,best model is non-local
-real_ppg_B,,BIDMC,peak_f1,SeasonalNaive,Floor,best model is non-local
-real_ppg_B,,BIDMC,rr_err,SeasonalNaive,Floor,best model is non-local
+real_ppg_B,,BIDMC,rr_err,TSMixer,Linear and MLP,best model is non-local
 real_ppg_B,,BIDMC,freq,MICN_Mean,Local receptive field,local model not significantly better than Linear
 real_ppg_B,,BIDMC,freq,MICN_Regre,Local receptive field,local model not significantly better than Linear
 real_ppg_B,,BIDMC,freq,ModernTCN,Local receptive field,local model not significantly better than Linear
@@ -234,9 +242,9 @@ real_ppg_B,,BIDMC,rr_err,ModernTCN,Local receptive field,local model not signifi
 real_ppg_B,,BIDMC,rr_err,PatchTST,Local receptive field,local model not significantly better than Linear
 real_ppg_B,,BIDMC,rr_err,TimesNet,Local receptive field,local model not significantly better than Linear
 real_ppg_B,,DaLiA,mae,MLinear,Linear and MLP,best model is non-local
-real_ppg_B,,DaLiA,phase,SeasonalNaive,Floor,best model is non-local
+real_ppg_B,,DaLiA,phase,MLinear,Linear and MLP,best model is non-local
 real_ppg_B,,DaLiA,freq,MLinear,Linear and MLP,best model is non-local
-real_ppg_B,,DaLiA,peak_f1,SeasonalNaive,Floor,best model is non-local
+real_ppg_B,,DaLiA,peak_f1,Autoformer,Decomposition,best model is non-local
 real_ppg_B,,DaLiA,rr_err,Transformer,Global attention,best model is non-local
 real_ppg_B,,DaLiA,freq,MICN_Mean,Local receptive field,local model not significantly better than Linear
 real_ppg_B,,DaLiA,freq,MICN_Regre,Local receptive field,local model not significantly better than Linear
@@ -271,7 +279,7 @@ real_ppg_B,,DaLiA,rr_err,TimesNet,Local receptive field,local model not signific
 real_ecg_B,,AFDB,mae,MLinear,Linear and MLP,best model is non-local
 real_ecg_B,,AFDB,freq,DLinear,Decomposition,best model is non-local
 real_ecg_B,,AFDB,peak_timing,Linear,Linear and MLP,best model is non-local
-real_ecg_B,,AFDB,peak_f1,SeasonalNaive,Floor,best model is non-local
+real_ecg_B,,AFDB,peak_f1,FreMLP,Decomposition,best model is non-local
 real_ecg_B,,AFDB,freq,MICN_Mean,Local receptive field,local model not significantly better than Linear
 real_ecg_B,,AFDB,freq,MICN_Regre,Local receptive field,local model not significantly better than Linear
 real_ecg_B,,AFDB,freq,ModernTCN,Local receptive field,local model not significantly better than Linear
@@ -304,7 +312,7 @@ real_ecg_B,,AFDB,rr_err,PatchTST,Local receptive field,local model not significa
 real_ecg_B,,AFDB,rr_err,TimesNet,Local receptive field,local model not significantly better than Linear
 real_ecg_B,,NSRDB,mae,MLinear,Linear and MLP,best model is non-local
 real_ecg_B,,NSRDB,phase,MLinear,Linear and MLP,best model is non-local
-real_ecg_B,,NSRDB,rr_err,SeasonalNaive,Floor,best model is non-local
+real_ecg_B,,NSRDB,rr_err,Transformer,Global attention,best model is non-local
 real_ecg_B,,NSRDB,freq,MICN_Mean,Local receptive field,local model not significantly better than Linear
 real_ecg_B,,NSRDB,freq,MICN_Regre,Local receptive field,local model not significantly better than Linear
 real_ecg_B,,NSRDB,freq,ModernTCN,Local receptive field,local model not significantly better than Linear
@@ -335,3 +343,49 @@ real_ecg_B,,NSRDB,rr_err,MICN_Regre,Local receptive field,local model not signif
 real_ecg_B,,NSRDB,rr_err,ModernTCN,Local receptive field,local model not significantly better than Linear
 real_ecg_B,,NSRDB,rr_err,PatchTST,Local receptive field,local model not significantly better than Linear
 real_ecg_B,,NSRDB,rr_err,TimesNet,Local receptive field,local model not significantly better than Linear
+tier2_ecg,,ECG,mae,MLinear,Linear and MLP,best model is non-local
+tier2_ecg,,ECG,phase,TSMixer,Linear and MLP,best model is non-local
+tier2_ecg,,ECG,peak_timing,Transformer,Global attention,best model is non-local
+tier2_ecg,,ECG,peak_f1,FreMLP,Decomposition,best model is non-local
+tier2_ecg,,ECG,rr_err,Autoformer,Decomposition,best model is non-local
+tier2_ecg,,ECG,freq,MICN_Mean,Local receptive field,local model not significantly better than Linear
+tier2_ecg,,ECG,freq,ModernTCN,Local receptive field,local model not significantly better than Linear
+tier2_ecg,,ECG,freq,PatchTST,Local receptive field,local model not significantly better than Linear
+tier2_ecg,,ECG,mae,MICN_Mean,Local receptive field,local model not significantly better than Linear
+tier2_ecg,,ECG,mae,ModernTCN,Local receptive field,local model not significantly better than Linear
+tier2_ecg,,ECG,mae,PatchTST,Local receptive field,local model not significantly better than Linear
+tier2_ecg,,ECG,peak_f1,MICN_Mean,Local receptive field,local model not significantly better than Linear
+tier2_ecg,,ECG,peak_f1,ModernTCN,Local receptive field,local model not significantly better than Linear
+tier2_ecg,,ECG,peak_f1,PatchTST,Local receptive field,local model not significantly better than Linear
+tier2_ecg,,ECG,peak_timing,MICN_Mean,Local receptive field,local model not significantly better than Linear
+tier2_ecg,,ECG,peak_timing,ModernTCN,Local receptive field,local model not significantly better than Linear
+tier2_ecg,,ECG,peak_timing,PatchTST,Local receptive field,local model not significantly better than Linear
+tier2_ecg,,ECG,phase,MICN_Mean,Local receptive field,local model not significantly better than Linear
+tier2_ecg,,ECG,phase,ModernTCN,Local receptive field,local model not significantly better than Linear
+tier2_ecg,,ECG,phase,PatchTST,Local receptive field,local model not significantly better than Linear
+tier2_ecg,,ECG,rr_err,MICN_Mean,Local receptive field,local model not significantly better than Linear
+tier2_ecg,,ECG,rr_err,ModernTCN,Local receptive field,local model not significantly better than Linear
+tier2_ecg,,ECG,rr_err,PatchTST,Local receptive field,local model not significantly better than Linear
+tier2_ppg,,PPG,mae,MLinear,Linear and MLP,best model is non-local
+tier2_ppg,,PPG,phase,MLinear,Linear and MLP,best model is non-local
+tier2_ppg,,PPG,freq,MLinear,Linear and MLP,best model is non-local
+tier2_ppg,,PPG,peak_f1,NBeats,Linear and MLP,best model is non-local
+tier2_ppg,,PPG,rr_err,MLinear,Linear and MLP,best model is non-local
+tier2_ppg,,PPG,freq,MICN_Mean,Local receptive field,local model not significantly better than Linear
+tier2_ppg,,PPG,freq,MICN_Regre,Local receptive field,local model not significantly better than Linear
+tier2_ppg,,PPG,freq,PatchTST,Local receptive field,local model not significantly better than Linear
+tier2_ppg,,PPG,mae,MICN_Mean,Local receptive field,local model not significantly better than Linear
+tier2_ppg,,PPG,mae,MICN_Regre,Local receptive field,local model not significantly better than Linear
+tier2_ppg,,PPG,mae,PatchTST,Local receptive field,local model not significantly better than Linear
+tier2_ppg,,PPG,peak_f1,MICN_Mean,Local receptive field,local model not significantly better than Linear
+tier2_ppg,,PPG,peak_f1,MICN_Regre,Local receptive field,local model not significantly better than Linear
+tier2_ppg,,PPG,peak_f1,PatchTST,Local receptive field,local model not significantly better than Linear
+tier2_ppg,,PPG,peak_timing,MICN_Mean,Local receptive field,local model not significantly better than Linear
+tier2_ppg,,PPG,peak_timing,MICN_Regre,Local receptive field,local model not significantly better than Linear
+tier2_ppg,,PPG,peak_timing,PatchTST,Local receptive field,local model not significantly better than Linear
+tier2_ppg,,PPG,phase,MICN_Mean,Local receptive field,local model not significantly better than Linear
+tier2_ppg,,PPG,phase,MICN_Regre,Local receptive field,local model not significantly better than Linear
+tier2_ppg,,PPG,phase,PatchTST,Local receptive field,local model not significantly better than Linear
+tier2_ppg,,PPG,rr_err,MICN_Mean,Local receptive field,local model not significantly better than Linear
+tier2_ppg,,PPG,rr_err,MICN_Regre,Local receptive field,local model not significantly better than Linear
+tier2_ppg,,PPG,rr_err,PatchTST,Local receptive field,local model not significantly better than Linear

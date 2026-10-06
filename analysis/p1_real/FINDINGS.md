@@ -31,32 +31,37 @@ moderate correlation, not a strong one.
 
 Per-comparison values are in `ranking_transfer.csv`.
 
-## 1. The headline: a trivial baseline is worst by MAE and best by phase
+## 1. A trivial periodic baseline was evaluated and then removed
 
-`SeasonalNaive` repeats the last dominant period of the history. Its rank among 15 to 16 models:
+A seasonal-naive forecaster was run alongside the roster and was, on real ECG, simultaneously the
+worst model by mean absolute error and the best by phase error, and on clean PPG it beat every
+trained architecture. It was removed from the reported results on 2026-10-06 by Rakib's decision,
+because it is not part of the published model set and no reviewer asked for it. The runs remain
+under `results/` and the implementation under `Model/SeasonalNaive.py`; clearing
+`analysis/common.py::EXCLUDE_MODELS` restores it everywhere.
 
-| dataset / track | rank by MAE | rank by phase error |
+What changes without it: the single-model demonstration of the metric disagreement is gone, and so
+is the observation that no trained model beats periodic extrapolation on clean PPG. What does not
+change: the rank-transfer result below, which is slightly stronger without it, and the negative
+rank correlations on ECG morphology, which are the remaining evidence for the disagreement.
+
+## 1b. The headline: fidelity rankings transfer to real data, MAE rankings do not
+
+Kendall tau between the model ranking on the matched synthetic family and on the real dataset,
+13 comparisons across five datasets and both tracks, 15 models:
+
+| ranking metric | mean tau | negative transfers |
 |---|---|---|
-| BIDMC A / B | 1 / 1 | 1 / 1 |
-| MIT-BIH NSR A | 16 (last) | 1 |
-| AFDB A | 16 (last) | 1 |
-| PPG-DaLiA A / B | 16 / 15 | 2 / 1 |
-| Sleep-EDF A | 16 | 16 |
+| MAE | **0.07** | 4 of 13 |
+| phase error | **0.33** | 1 of 13 |
+| frequency error | 0.20 | 3 of 13 |
 
-On real ECG, one model is simultaneously the worst by MAE and the best by phase. The learned
-models sit at 87 to 90 degrees of phase error, which is what an unbiased random phase gives, so
-they carry essentially no timing information; periodic extrapolation carries it and pays for it
-in pointwise error. On clean PPG (BIDMC) the naive floor wins outright, on both tracks and on
-every metric: MAE 0.50 against 0.65 for the best learned model, phase 33 degrees against 56,
-beat-detection F1 0.64 against 0.38, heart-rate error 4.3 bpm against 4.8.
-
-This is a stronger form of the paper's claim than the synthetic analysis supports, and it is the
-most direct answer available to R4.2 and R4.3: the metric decides the winner, and on real
-periodic signals none of the fourteen trained architectures beats periodic extrapolation from a
-five-second history.
-
-Sleep-EDF is the exception that keeps the claim honest: EEG has no dominant period to repeat, the
-naive floor is last on both metrics, and the linear family leads.
+Ranking the synthetic benchmark by MAE carries almost no information about which model will do well
+on real signals, and on ECG morphology the correlation is clearly negative. Ranking the same
+benchmark by phase fidelity transfers more than four times better. At the level of inductive-bias
+groups rather than individual models the transfer is far stronger still: Spearman rho of 0.80 to
+1.00 on PPG and ECG, with the local group's mean rank moving only from 4.5 to 4.4, 5.0 to 5.0 and
+5.0 to 4.4. It does not transfer on EEG (rho 0.00), where no dominant local period exists.
 
 ## 2. MAE and fidelity rankings disagree, and on ECG they are anti-correlated
 
@@ -104,19 +109,20 @@ Heart-rate error over the ten-second horizon, best model per dataset:
 
 | dataset / track | best model | error (bpm) |
 |---|---|---|
-| BIDMC A / B | SeasonalNaive | 4.3 / 6.7 |
-| NSRDB A / B | PatchTST / SeasonalNaive | 12.5 / 13.1 |
-| AFDB A / B | SeasonalNaive | 18.6 / 20.8 |
-| DaLiA A / B | MICN Mean / Transformer | 18.2 / 43.9 |
+| BIDMC A / B | MICN (regre) / TSMixer | 4.8 / 10.5 |
+| NSRDB A / B | PatchTST / Transformer | 12.5 / 18.3 |
+| AFDB A / B | ModernTCN / MICN (regre) | 29.8 / 20.8 |
+| DaLiA A / B | MICN (mean) / Transformer | 18.2 / 43.9 |
 
-Only clean PPG supports a clinically useful heart rate from a forecast; 4.3 bpm is within the
-tolerance of consumer monitoring, while 12 to 44 bpm is not. The naive floor is best on four of
-the eight dataset and track combinations.
+Only clean photoplethysmography supports a clinically useful heart rate from a forecast; 4.8 bpm is
+within the tolerance of consumer monitoring, while 12 to 44 bpm is not. Local receptive fields hold
+the best result on five of the eight dataset and track combinations.
 
 ## 5. What this changes in the write-up
 
-1. The seasonal-naive floor moves from a sanity check to a main-text result. It is the cleanest
-   demonstration that the choice of metric determines the ranking.
+1. The clearest demonstration that the metric determines the ranking is now the set of negative
+   rank correlations on ECG morphology: choosing by mean absolute error selects against
+   inter-beat-interval accuracy (-0.69), beat detection (-0.65) and band power (-0.63).
 2. The claim to defend is not "MAE and fidelity always disagree" but "MAE selects low-amplitude,
    temporally uninformative forecasts, and how much that matters depends on the metric and the
    modality". The tau table above gives the conditions.

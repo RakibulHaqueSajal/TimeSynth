@@ -30,6 +30,12 @@ from utils import fidelity as F                     # noqa: E402
 from utils.config import DEFAULT_DATA_ROOT, DEFAULT_REAL_ROOT, load_bias_groups, load_yaml, paradigm_config_path  # noqa: E402
 from utils.results_io import load_result             # noqa: E402
 
+# Models excluded from every analysis and from all reported figures and tables.
+# SeasonalNaive was removed on 2026-10-06 by Rakib's decision: it is not part of the published
+# model set and no reviewer asked for it. Its runs are kept on disk under results/ and the
+# implementation is kept in Model/SeasonalNaive.py, so clearing this list restores it everywhere.
+EXCLUDE_MODELS = {"SeasonalNaive"}
+
 RESULTS_ROOT = os.environ.get("TIMESYNTH_RESULTS",
                               "/uufs/sci.utah.edu/projects/medvic-lab/Rakib/Time_Series/TimeSynth_runs/revision/results")
 CACHE = os.path.join(REPO, "analysis", "cache")
@@ -204,4 +210,7 @@ def load_paradigm(paradigm: str, results_root: str = RESULTS_ROOT, force: bool =
         frames.append(df)
     if not frames:
         return pd.DataFrame()
-    return pd.concat(frames, ignore_index=True)
+    out = pd.concat(frames, ignore_index=True)
+    if EXCLUDE_MODELS:
+        out = out[~out.model.isin(EXCLUDE_MODELS)].reset_index(drop=True)
+    return out

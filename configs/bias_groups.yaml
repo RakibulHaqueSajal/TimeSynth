@@ -30,18 +30,19 @@ groups:
     mechanism: Sampled futures
     color: "#66a61e"
     models: [CSDI]
+  # Floor group retired 2026-10-06: SeasonalNaive is excluded from the revision's reported results
+  # (see analysis/common.py::EXCLUDE_MODELS). Restore the member list to bring the group back.
   Floor:
     key: floor
     mechanism: No learning
     color: "#666666"
-    models: [SeasonalNaive]
+    models: []
 
 # Canonical model order for tables and legends
 model_order: [Linear, MLinear, NBeats, TSMixer, DLinear, FITS, FreMLP, Autoformer, Transformer,
-              PatchTST, TimesNet, ModernTCN, MICN_Mean, MICN_Regre, CSDI, SeasonalNaive]
+              PatchTST, TimesNet, ModernTCN, MICN_Mean, MICN_Regre, CSDI]
 
 # Display names (LaTeX-safe)
 display:
   MICN_Mean: MICN (mean)
   MICN_Regre: MICN (regre)
-  SeasonalNaive: Seasonal naive

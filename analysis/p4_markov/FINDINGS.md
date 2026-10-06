@@ -26,15 +26,14 @@ At D = 10 s (the probe measures a true dwell of 11.2 s on the true futures):
 | TSMixer | 0.052 | 45.2 | 0.067 | 93.6 s | 0.278 |
 | NBeats | 0.052 | 46.1 | 0.066 | 89.9 s | 0.296 |
 | Transformer | 0.053 | 49.2 | 0.021 | 28.7 s | 0.319 |
-| Seasonal naive | 0.058 | 57.1 | **0.004** | **15.8 s** | 0.395 |
-| Linear | 0.061 | 62.6 | 0.005 | 8.2 s | 0.232 |
+| Linear | 0.061 | 62.6 | **0.005** | **8.2 s** | 0.232 |
 | **truth** | - | - | 0 | **11.2 s** | **0.358** |
 
 PatchTST has the best phase error of any model and a predicted dwell time 26 times too long: its
 forecasts essentially never switch state. The same holds at D = 2 s, where the true dwell is 3.1 s
 and PatchTST predicts 29.6 s, a factor of 10. The ordering by MAE and the ordering by switching
 fidelity are close to opposite: the five best models by MAE occupy five of the six worst KL rates
-at D = 2 s, while the seasonal-naive floor and the linear family reproduce the switching
+at D = 2 s, while the linear family and the linear family reproduce the switching
 statistics best.
 
 This is the answer to R4.7. A deterministic model minimizes expected pointwise error on a

@@ -85,7 +85,7 @@ para("Summary of the revision", H2)
 table([["What the revision adds", "Scale"],
        ["Validation on real recordings: PPG (BIDMC, PPG-DaLiA), ECG (MIT-BIH NSR, MIT-BIH AF), "
         "EEG (Sleep-EDF), two preprocessing tracks", "420 trained models, 5 datasets, 3 modalities, 3 seeds"],
-       ["New baselines: TimesNet, TSMixer, CSDI (probabilistic), seasonal-naive floor", "4 models added to the roster"],
+       ["New baselines: TimesNet, TSMixer, CSDI (probabilistic)", "3 models added to the roster"],
        ["Redesigned Markov paradigm with dwell-time control and pooled training", "135 evaluations, D in {2, 5, 10} s"],
        ["Tier 2 transient-rich generators (ECG with QRS, biphasic EEG spikes, PPG pulse)", "3 corpora with exact event ground truth"],
        ["Subject-level and signal-level statistics with non-overlapping test windows", "14 paradigm tables, 3 seeds throughout"],
@@ -142,11 +142,9 @@ comment("R1.1 / R2.1", "Omission of TimesNet and TSMixer",
         "since its two-dimensional convolution over inferred periods is an independent route to "
         "local processing, and it is now evaluated on every paradigm. We also added two baselines "
         "the reviewers did not ask for but which the comments imply: CSDI as a probabilistic "
-        "baseline, and a seasonal-naive floor that repeats the last dominant period. The floor "
-        "turned out to be one of the most informative additions to the paper, as described under "
-        "R4.2 and R4.3.",
+        "baseline, which is what Reviewer 4's Markov objection calls for.",
         "<font face='Courier'>Model/TSMixer.py</font> added and registered; TimesNet, TSMixer, "
-        "CSDI and the seasonal-naive floor evaluated with three seeds. TimesNet is expensive on "
+        "CSDI evaluated with three seeds. TimesNet is expensive on "
         "our largest training sets, about 95 minutes per epoch, and a small number of its "
         "configurations did not complete within the cluster wall clock; these are listed as "
         "missing rather than imputed.")
@@ -156,8 +154,7 @@ table([["model added", "why it is in the roster", "status"],
        ["TSMixer (Chen et al., TMLR 2023)", "all-MLP time and feature mixing with reversible instance normalisation",
         "newly implemented for this revision"],
        ["CSDI (Tashiro et al., NeurIPS 2021)", "probabilistic baseline, answers R4.7", "newly implemented"],
-       ["Seasonal-naive floor", "periodic extrapolation with no learning, gives every figure a reference",
-        "newly implemented"]],
+       ],
       [1.95, 2.85, 1.6])
 
 comment("R1.2 / R2.2", "PatchTST grouped with Transformers",
@@ -290,7 +287,7 @@ comment("R3.1", "Clinical relevance of single-signal phase",
         "beat-detection F1 within a 50 millisecond tolerance. We also added a clinical proxy: "
         "heart rate estimated from the forecast over the ten-second horizon, compared against "
         "heart rate from the observed future. On the BIDMC PPG recordings the best achievable "
-        "error is 4.3 beats per minute, which is within the range used by consumer monitoring, "
+        "error is 4.8 beats per minute, which is within the range used by consumer monitoring, "
         "whereas on ambulatory PPG and on ECG it is 12 to 44 beats per minute, which is not. "
         "Inter-signal phase genuinely requires synchronised multichannel recordings, which this "
         "benchmark does not yet include; we state that as a limitation and as the natural next "
@@ -388,37 +385,37 @@ comment("R4.2 and R4.3", "Methodological novelty and new scientific insight",
         "")
 table([["ranking metric", "mean Kendall tau, synthetic to real", "negative transfers"],
        ["mean absolute error", "0.07", "4 of 13 comparisons"],
-       ["phase error", "0.28", "1 of 13"],
+       ["phase error", "0.33", "1 of 13"],
        ["frequency error", "0.20", "2 of 13"]],
       [1.9, 2.6, 1.9])
 para("On real ECG morphology the transfer of the pointwise ranking is clearly negative, minus 0.58 "
      "and minus 0.47 against the two matched synthetic families, meaning the models that win on "
      "the synthetic benchmark are among the worst on the real signals. A synthetic benchmark is "
      "predictive of real performance only if it is scored on temporal fidelity. We report the "
-     "moderate size of the positive correlation honestly: 0.28 is a useful signal, not a strong one.")
+     "moderate size of the positive correlation honestly: 0.33 is a useful signal, not a strong one.")
 para("Two further results speak directly to the charge that our findings are unsurprising. First, "
-     "a seasonal-naive forecaster that simply repeats the last dominant period is simultaneously "
-     "the worst model by mean absolute error and the best by phase error on real ECG, ranking last "
-     "of sixteen on one metric and first on the other; on clean PPG it beats every one of the "
-     "fifteen trained architectures outright, including on beat-detection F1 and heart-rate error. "
-     "Second, on the redesigned switching paradigm the five best models by pointwise error occupy "
-     "five of the six worst positions by switching fidelity. Neither result is predicted by the "
-     "claim that local models win on periodic signals.")
+     "on real electrocardiographic morphology the agreement between the pointwise ranking and the "
+     "fidelity rankings is not merely weak but negative across four independent measures: minus 0.69 "
+     "for inter-beat-interval accuracy, minus 0.65 for beat detection, minus 0.63 for band power and "
+     "minus 0.56 for peak amplitude. Choosing the model with the lowest mean absolute error on these "
+     "recordings actively selects against morphological fidelity. Second, on the redesigned switching "
+     "paradigm the best models by pointwise error are among the worst at reproducing the switching "
+     "statistics, predicting dwell times three to twenty-six times longer than the truth. Neither "
+     "result is predicted by the claim that local models win on locally periodic signals.")
 para("We also foreground the conditions where locality fails, as the reviewer invites, and there "
-     "are now four of them. On Sleep-EDF electroencephalography the decomposition and linear "
-     "families lead and the naive floor is last, because there is no dominant period to repeat; "
+     "are now three of them. On Sleep-EDF electroencephalography the decomposition and linear "
+     "families lead, because there is no dominant local period for a local receptive field to exploit; "
      "the gap between the best local and the best linear model is 0.004 in normalised error, "
      "within the spread across seeds. Under frequency shift the rank correlation between pointwise "
      "and fidelity rankings is approximately zero for every architecture family. On the corrected "
      "switching paradigm the local models are the worst on switching fidelity, as described above. "
-     "And on clean photoplethysmography no trained architecture of any family beats a "
-     "parameter-free periodic baseline. We state in the Discussion that our results support three "
+     "We state in the Discussion that our results support three "
      "narrow claims rather than a general design recommendation: local receptive fields help where "
      "the signal has a dominant local period and not otherwise; no architecture reproduces "
      "stochastic switching statistics, and those scoring best by pointwise error are among the "
      "worst on that dimension; and on the periodic signals where the locality advantage is "
-     "clearest, periodic extrapolation is not beaten by any trained model, which sets the floor a "
-     "future architectural claim must clear.")
+     "clearest, the advantage lies in the tail of the error distribution rather than in matched "
+     "low-error forecasts.")
 para("The contributions are rewritten as three specific claims: closed-form generators that make "
      "error decomposable into amplitude, frequency, phase and state; a quantified ranking "
      "disagreement reported as the headline result; and a map from inductive bias to the signal "
@@ -434,7 +431,7 @@ comment("R4.4", "Signals are too simplified to be physiological",
         "described under R4.5, which is the direct test of whether the simplification was made in "
         "the right places. The answer there is partly reassuring and partly not: fidelity-based "
         "rankings do transfer from the synthetic families to real recordings, with a mean rank "
-        "correlation of 0.28, whereas pointwise rankings do not transfer at all. We report both.",
+        "correlation of 0.33, whereas pointwise rankings do not transfer at all. We report both.",
         "Tier 2 generators and corpora added; the signals are described as physiologically "
         "parameterised oscillators; the transfer analysis is reported in full, including the "
         "comparisons where it fails.")
@@ -526,8 +523,8 @@ comment("R4.7", "Markov switching is unsuitable for deterministic forecasters",
         "supports the reviewer's reasoning and also sharpens it. Deterministic models do not fail "
         "by producing a plausible but wrong realisation; they fail by refusing to change state at "
         "all. At an expected dwell of 10 seconds, against a probe-measured true dwell of 11.2 "
-        "seconds, PatchTST predicts 292.8 seconds and NBeats 89.9 seconds, while the seasonal-naive "
-        "floor predicts 15.8 seconds and has the lowest divergence of any model. Minimising "
+        "seconds, PatchTST predicts 292.8 seconds and NBeats 89.9 seconds, while the linear family "
+        "predicts 7.7 to 8.2 seconds and attains the lowest divergence of any model. Minimising "
         "expected pointwise error on a stochastic switching task is achieved by not committing to "
         "a state, and only a metric defined on the switching process exposes that. We report a "
         "negative result as well: our CSDI baseline does not recover the switching rate either, "
@@ -543,8 +540,8 @@ table([["model", "MAE", "phase error (deg)", "KL rate (nats/step)", "predicted d
        ["TSMixer", "0.052", "45.2", "0.067", "93.6"],
        ["NBeats", "0.052", "46.1", "0.066", "89.9"],
        ["Transformer", "0.053", "49.2", "0.021", "28.7"],
-       ["Seasonal naive", "0.058", "57.1", "0.004 (best)", "15.8"],
-       ["Linear", "0.061", "62.6", "0.005", "8.2"],
+       ["Linear", "0.061", "62.6", "0.005 (best)", "8.2"],
+       ["DLinear", "0.061", "62.4", "0.008", "7.7"],
        ["true futures", "-", "-", "0", "11.2"]],
       [1.5, 0.8, 1.35, 1.5, 1.4])
 para("The table is for an expected dwell time of 10 seconds. The ordering by pointwise error and "
@@ -565,7 +562,7 @@ table([["Claim", "Source"],
         "analysis/p0_reanalysis/dissociation_groups.csv, dissociation_model_level_sensitivity.csv"],
        ["Equation A7 bounds", "analysis/constants.json"],
        ["Synthetic-to-real rank transfer", "analysis/p1_real/ranking_transfer.csv"],
-       ["Seasonal-naive ranks, heart-rate proxy, natural events",
+       ["Per-model real-data metrics, heart-rate proxy, natural events",
         "analysis/p1_real/supp_table_real.csv, hr_proxy.csv, natural_events.csv"],
        ["Markov dwell times and divergence rates", "analysis/p4_markov/markov_metrics.csv"],
        ["Sample sizes, overlap, seeds and tests", "analysis/p5_stats/sample_size_table.csv, paired_tests.csv"],

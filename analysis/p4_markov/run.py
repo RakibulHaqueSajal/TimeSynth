@@ -30,7 +30,7 @@ from scipy.signal import welch
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(os.path.dirname(HERE))
 sys.path.insert(0, REPO)
-from analysis.common import RESULTS_ROOT, bias as load_bias, load_paradigm   # noqa: E402
+from analysis.common import EXCLUDE_MODELS, RESULTS_ROOT, bias as load_bias, load_paradigm  # noqa: E402
 from analysis.plotting import BLUE, GRAY, NAVY, RED, TEAL, plt, save, title   # noqa: E402
 from utils import fidelity as F                                               # noqa: E402
 from utils.config import DEFAULT_DATA_ROOT                                    # noqa: E402
@@ -134,6 +134,8 @@ def main():
         for run in runs:
             rel = os.path.relpath(run, RESULTS_ROOT).split(os.sep)
             model, seed = rel[2], int(rel[3][4:])
+            if model in EXCLUDE_MODELS:
+                continue
             res = load_result(run)
             hist, true, pred, meta = res[:4]
             samples = res[4] if len(res) > 4 else None
