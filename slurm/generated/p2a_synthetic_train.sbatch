@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=p2a_synthetic_train
 #SBATCH --partition=general-gpu
-#SBATCH --time=0-12:00:00
+#SBATCH --time=1-00:00:00
 #SBATCH --mem=32G
 #SBATCH --cpus-per-task=6
 #SBATCH --gres=gpu:1
@@ -258,4 +258,6 @@ CMDS+=('/uufs/sci.utah.edu/projects/medvic-lab/Rakib/miniconda3/envs/timeenv/bin
 
 echo "[$(date)] task $SLURM_ARRAY_TASK_ID on $(hostname): ${CMDS[$SLURM_ARRAY_TASK_ID]}"
 eval "${CMDS[$SLURM_ARRAY_TASK_ID]}"
-echo "[$(date)] exit $?"
+rc=$?
+echo "[$(date)] exit $rc"
+exit $rc

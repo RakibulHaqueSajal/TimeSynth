@@ -1,19 +1,23 @@
+phase: p4_markov_testonly
 results_dir: /uufs/sci.utah.edu/projects/medvic-lab/Rakib/Time_Series/TimeSynth_runs/revision/results
 checkpoint_dir: /uufs/sci.utah.edu/projects/medvic-lab/Rakib/Time_Series/TimeSynth_runs/revision/checkpoints
+slurm:
+  partition: general-gpu
+  time: 0-06:00:00
+  mem: 24G
+  cpus: 4
+  gres: gpu:1
+  max_concurrent: 5
 env:
   conda_python: /uufs/sci.utah.edu/projects/medvic-lab/Rakib/miniconda3/envs/timeenv/bin/python
 extra_args: --num_workers 4
-phase: p2a_synthetic_train
-slurm:
-  partition: general-gpu
-  time: 1-00:00:00
-  mem: 32G
-  cpus: 6
-  gres: gpu:1
-  max_concurrent: 5
 blocks:
-- paradigm: clean
-  models: &id001
+- paradigm: markov_dwell
+  conditions:
+  - D2
+  - D5
+  - D10
+  models:
   - Linear
   - DLinear
   - FITS
@@ -26,20 +30,11 @@ blocks:
   - PatchTST
   - Transformer
   - Autoformer
-  - TimesNet
   - TSMixer
   - SeasonalNaive
   - CSDI
-  seeds: &id002
+  seeds:
   - 2021
   - 2022
   - 2023
-  is_training: 1
-- paradigm: state_transition
-  models: *id001
-  seeds: *id002
-  is_training: 1
-- paradigm: markov_dwell
-  models: *id001
-  seeds: *id002
-  is_training: 1
+  is_training: 2

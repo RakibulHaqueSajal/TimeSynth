@@ -84,3 +84,25 @@ signal with `--train_epochs 60` so the schedule completes within the run, and co
 * The MICN leak is a correction the paper must carry regardless of how cause 2 resolves.
 * Phase 1, the real-data validation, is unaffected: it never used the legacy checkpoints and all
   its models were trained under the revision protocol.
+
+
+## Resolution (Rakib, 2026-10-06): not pursued further
+
+Rakib's call: exact reproduction of the paper's numbers is not required, and seed variance is a
+plausible explanation. A check against the revision's own three seeds partly supports that and
+partly does not:
+
+| model | across-seed CV (revision, clean) | paper-vs-rerun ratio |
+|---|---|---|
+| NBeats, Drift Harmonic | 41 percent | 3.8, consistent with seed noise |
+| PatchTST | 1.5 to 2.3 percent | 0.92, 1.07, 2.05; two of three signals reproduce |
+| ModernTCN | 0.9 to 3.1 percent | 3.5, 3.7, 3.7 on all three signals, systematic |
+
+NBeats is genuinely seed-unstable on drift-harmonic signals and PatchTST essentially reproduces.
+ModernTCN's gap is a consistent factor of about 3.6 with a seed spread of only 1 to 3 percent, so
+seed variance does not explain it; the cause remains unidentified and was not investigated further
+by decision.
+
+How to report it: the Phase 2 synthetic table is a new experiment run under one consistent,
+leak-free protocol with three seeds, not a reproduction of the published table. The MICN leakage
+correction stands on its own and is independent of this.
