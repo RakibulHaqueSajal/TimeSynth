@@ -317,6 +317,7 @@ class Exp_Long_Term_Forecast_Test_Dist(Exp_Basic):
         tag_pred_hist = {}  # tag -> list of [1, L+H, C]
         tag_true_hist = {}  # tag -> list of [1, L+H, C]
         global_tags = []    # one tag per window in loader order (for meta.parquet)
+        samples_all = []    # probabilistic models: [S, B, H, C] per batch
 
         self.model.eval()
         with torch.no_grad():
@@ -360,7 +361,13 @@ class Exp_Long_Term_Forecast_Test_Dist(Exp_Basic):
                 # ------------------------
                 # Model forward (same logic you had)
                 # ------------------------
-                if "former" in self.args.model.lower():
+                if hasattr(self.model, "sample"):
+                    # probabilistic models (CSDI): draw S samples, point forecast = median.
+                    # Same branch as Experiment/exp_forecast.py::test.
+                    S = self.model.sample(batch_x, getattr(self.args, "n_samples", 50))   # [S, B, H, C]
+                    samples_all.append(S.detach().cpu().numpy())
+                    outputs = S.median(dim=0).values
+                elif "former" in self.args.model.lower():
                     hist_len = batch_x.shape[1]
                     half = hist_len // 2
 
@@ -498,8 +505,10 @@ class Exp_Long_Term_Forecast_Test_Dist(Exp_Basic):
         L = self.args.seq_len
         meta = build_meta(self.args, preds_with_history.shape[0], dataset=test_data,
                           tags=(global_tags if len(global_tags) == preds_with_history.shape[0] else None))
+        samples = np.concatenate(samples_all, axis=1) if samples_all else None      # [S, N, H, C]
         write_run_outputs(self.args, folder_path, trues_with_history[:, :L, :],
                           trues_with_history[:, L:, :], preds_with_history[:, L:, :], meta,
+                          samples=samples,
                           save_legacy=getattr(self.args, "save_legacy_arrays", True))
 
         if SAVE_GT_STATE:

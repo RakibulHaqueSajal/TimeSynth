@@ -85,3 +85,18 @@ def test_csdi_shapes_and_loss_decreases():
         opt.step()
         losses.append(loss.item())
     assert np.mean(losses[-10:]) < np.mean(losses[:10])
+
+
+def test_probabilistic_branch_present_in_both_runners():
+    """
+    CSDI needs its sampling branch in BOTH the train+test runner and the test-only runner.
+    It was missing from exp_test_only.py, which crashed every `--is_training 2` CSDI job
+    with "forward() takes 2 positional arguments but 5 were given".
+    """
+    import re
+    for fp in ("Experiment/exp_forecast.py", "Experiment/exp_test_only.py"):
+        src = open(os.path.join(ROOT, fp)).read()
+        assert 'hasattr(self.model, "sample")' in src, fp
+        assert "samples_all" in src, fp
+        # and the samples must reach write_run_outputs
+        assert re.search(r"write_run_outputs\([^)]*samples=", src, re.S), fp
