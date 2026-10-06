@@ -109,6 +109,17 @@ para("<b>2. The transformer family never used time features.</b> The embedding a
      "positional embeddings only.")
 para("<b>3. A figure used the wrong run.</b> The frequency-shift analysis registered the "
      "single-phase-modulation FITS run under the drift-harmonic family. That curve is regenerated.")
+para("<b>4. A published conclusion is reversed by the corrected switching paradigm.</b> The "
+     "manuscript reports that PatchTST recovers switching dynamics and scores at the top of the "
+     "Markov dimension. Under the redesigned paradigm, in which the expected dwell time is "
+     "controlled rather than the per-sample transition probability, PatchTST ranks last of fifteen "
+     "models on switching fidelity at expected dwell times of 2 and 5 seconds, and thirteenth at "
+     "10 seconds, predicting a mean dwell of 292.8 seconds against a true 11.2 seconds. The earlier "
+     "result was an artifact of the previous parameterisation, in which the chain switched faster "
+     "than one carrier cycle so that the decoded state sequence carried little information about "
+     "switching, compounded by the Gaussian divergence that Reviewer 3 correctly questions. We "
+     "report the reversal explicitly rather than quietly replacing the figure, and the affected "
+     "claims in the Results and in the Pareto analysis are withdrawn and restated.")
 para("None of these affect the real-data experiments, which were trained from scratch under the "
      "revised protocol.")
 
@@ -327,6 +338,11 @@ table([["switching probability p", "0.1", "0.3", "0.5", "0.7", "0.9"],
        ["mean dwell time (s)", "1.00", "0.33", "0.20", "0.14", "0.11"],
        ["carrier cycles per state at 1 Hz", "1.0", "0.3", "0.2", "0.1", "0.1"]],
       [2.2, 0.85, 0.85, 0.85, 0.85, 0.85], header=True)
+para("We note the consequence for our own conclusions. Re-running the paradigm with physiologically "
+     "plausible dwell times reverses the result we previously reported: the model we identified as "
+     "recovering switching dynamics is now last of fifteen on that dimension. We take this as "
+     "evidence that the reviewer's objection was not a matter of presentation but of measurement, "
+     "and we thank the reviewer for it.")
 
 comment("R3.5", "Symmetric KL should compare transition probabilities directly",
         "Gaussian KL is unmotivated; the transition matrices of the two fitted HMMs should be "
@@ -388,10 +404,21 @@ para("Two further results speak directly to the charge that our findings are uns
      "Second, on the redesigned switching paradigm the five best models by pointwise error occupy "
      "five of the six worst positions by switching fidelity. Neither result is predicted by the "
      "claim that local models win on periodic signals.")
-para("We also foreground the conditions where locality fails, as the reviewer invites. On "
-     "Sleep-EDF electroencephalography the linear family leads and the naive floor is last, "
-     "because there is no dominant period to repeat; under frequency shift the rank correlation "
-     "between pointwise and fidelity rankings is approximately zero for every architecture family.")
+para("We also foreground the conditions where locality fails, as the reviewer invites, and there "
+     "are now four of them. On Sleep-EDF electroencephalography the decomposition and linear "
+     "families lead and the naive floor is last, because there is no dominant period to repeat; "
+     "the gap between the best local and the best linear model is 0.004 in normalised error, "
+     "within the spread across seeds. Under frequency shift the rank correlation between pointwise "
+     "and fidelity rankings is approximately zero for every architecture family. On the corrected "
+     "switching paradigm the local models are the worst on switching fidelity, as described above. "
+     "And on clean photoplethysmography no trained architecture of any family beats a "
+     "parameter-free periodic baseline. We state in the Discussion that our results support three "
+     "narrow claims rather than a general design recommendation: local receptive fields help where "
+     "the signal has a dominant local period and not otherwise; no architecture reproduces "
+     "stochastic switching statistics, and those scoring best by pointwise error are among the "
+     "worst on that dimension; and on the periodic signals where the locality advantage is "
+     "clearest, periodic extrapolation is not beaten by any trained model, which sets the floor a "
+     "future architectural claim must clear.")
 para("The contributions are rewritten as three specific claims: closed-form generators that make "
      "error decomposable into amplitude, frequency, phase and state; a quantified ranking "
      "disagreement reported as the headline result; and a map from inductive bias to the signal "
