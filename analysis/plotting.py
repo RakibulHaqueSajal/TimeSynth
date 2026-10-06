@@ -13,10 +13,23 @@ plt.rcParams.update({"font.family": "sans-serif", "font.size": 9, "axes.spines.t
                      "axes.labelcolor": "#222222", "legend.frameon": False, "svg.fonttype": "none"})
 
 
-def title(ax, main, sub=None):
-    ax.set_title(main, color=NAVY, fontweight="bold", loc="left", fontsize=10)
+def title(ax, main, sub=None, wrap_at=78):
+    """
+    Navy bold title with an optional blue italic subtitle placed BELOW it.
+
+    The subtitle is drawn just above the axes and the title is padded above that, so the two
+    never overlap (they did when both were anchored at y = 1.0). Long subtitles are wrapped.
+    """
+    import textwrap
     if sub:
-        ax.text(0.0, 1.02, sub, transform=ax.transAxes, color=BLUE, style="italic", fontsize=8.5, va="bottom")
+        sub = "\n".join(textwrap.wrap(sub, wrap_at))
+        n_lines = sub.count("\n") + 1
+        ax.set_title(main, color=NAVY, fontweight="bold", loc="left", fontsize=10,
+                     pad=12 + 10 * n_lines)
+        ax.text(0.0, 1.015, sub, transform=ax.transAxes, color=BLUE, style="italic",
+                fontsize=8.5, va="bottom", ha="left")
+    else:
+        ax.set_title(main, color=NAVY, fontweight="bold", loc="left", fontsize=10, pad=8)
 
 
 def save(fig, path_no_ext, dpi=300):
