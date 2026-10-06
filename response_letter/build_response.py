@@ -14,8 +14,8 @@ from reportlab.lib.enums import TA_JUSTIFY
 from reportlab.lib.pagesizes import LETTER
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import inch
-from reportlab.platypus import (KeepTogether, PageBreak, Paragraph, SimpleDocTemplate, Spacer,
-                                Table, TableStyle)
+from reportlab.platypus import (CondPageBreak, KeepTogether, PageBreak, Paragraph,
+                                SimpleDocTemplate, Spacer, Table, TableStyle)
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, "Review_Response.pdf")
@@ -123,7 +123,7 @@ para("<b>4. A published conclusion is reversed by the corrected switching paradi
 para("None of these affect the real-data experiments, which were trained from scratch under the "
      "revised protocol.")
 
-story.append(PageBreak())
+story.append(CondPageBreak(3.2 * inch))
 
 # ---------------------------------------------------------------- reviewers 1 and 2
 para("Response to Reviewers 1 and 2", H1)
@@ -275,7 +275,7 @@ comment("R1.6 / R2.6", "Frequency bounds in Appendix A2.3",
         "written to a machine-readable constants file, so the text cannot drift from the code "
         "again.")
 
-story.append(PageBreak())
+story.append(CondPageBreak(3.2 * inch))
 
 # ---------------------------------------------------------------- reviewer 3
 para("Response to Reviewer 3", H1)
@@ -359,7 +359,7 @@ comment("R3.5", "Symmetric KL should compare transition probabilities directly",
         "dwell of 292.8 seconds, that is forecasts that essentially never change state, while "
         "having the lowest phase error of any model.")
 
-story.append(PageBreak())
+story.append(CondPageBreak(3.2 * inch))
 
 # ---------------------------------------------------------------- reviewer 4
 para("Response to Reviewer 4", H1)
@@ -554,7 +554,7 @@ para("The table is for an expected dwell time of 10 seconds. The ordering by poi
      "nominal 10 seconds. Predicted and true values pass through the same probe, so the comparison "
      "is internally consistent, but the absolute values are biased upward for short dwells.")
 
-story.append(PageBreak())
+story.append(CondPageBreak(3.2 * inch))
 para("Provenance of the numbers in this letter", H1)
 para("Every quantity quoted above is produced by a script in the revision repository and written "
      "to a file that can be regenerated from the stored predictions.")
