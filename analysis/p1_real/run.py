@@ -33,8 +33,8 @@ from utils.stats import aggregate_units, kendall_tau_ci, paired_vs_baseline, ran
 MATCH = {"ppg": ["Drift_Harmonic"], "ecg": ["Single_Phase_Modulation", "Dual_Phase_Modulation"],
          "eeg": ["Dual_Phase_Modulation"]}
 REAL = ["real_ppg_A", "real_ecg_A", "real_eeg_A", "real_ppg_B", "real_ecg_B"]
-METRICS_A = ["mae", "phase", "freq", "band_power", "xcorr_lag"]
-METRICS_B = ["mae", "phase", "freq", "band_power", "xcorr_lag", "peak_timing", "peak_amp", "peak_f1", "rr_err"]
+METRICS_A = ["mae", "mse", "phase", "freq", "band_power", "xcorr_lag"]
+METRICS_B = ["mae", "mse", "phase", "freq", "band_power", "xcorr_lag", "peak_timing", "peak_amp", "peak_f1", "rr_err"]
 
 
 def ci95(x):
